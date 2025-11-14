@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+venv/
+demo_venv/
+*.pyc
+__pycache__/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Service account credentials
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# Logs
+*.log
+logs/
+backend_ws.log
+backend_v2.log
+demo.log
+
+# Build outputs
+.next/
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/migrations/
+
+# Mock data
+mock_data_outputs/
+
+# Uploaded files
+intellitutor/uploads/
+uploads/
+
+# Process IDs
+*.pid

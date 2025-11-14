@@ -1,0 +1,165 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  password      String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  materials     Material[]
+  conversations Conversation[]
+}
+
+// Material model for uploaded textbooks/documents
+model Material {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  author            String?
+  fileName          String
+  fileSize          Int
+  fileType          String
+  fileUrl           String
+  thumbnailUrl      String?
+  uploadDate        DateTime  @default(now())
+  lastAccessed      DateTime?
+  processingStatus  ProcessingStatus @default(PENDING)
+  categories        String[]
+  isFavorite        Boolean   @default(false)
+  pageCount         Int?
+  
+  // AI-generated content
+  wholeSummary      String?   @db.Text
+  chapters          Chapter[]
+  concepts          Concept[]
+  conversations     Conversation[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([processingStatus])
+}
+
+// Chapter model for book structure
+model Chapter {
+  id                String    @id @default(cuid())
+  materialId        String
+  material          Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  number            Int
+  title             String
+  pageStart         Int
+  pageEnd           Int
+  summaryBrief      String?   @db.Text
+  summaryStandard   String?   @db.Text
+  summaryDetailed   String?   @db.Text
+  practiceQuestions Json?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([materialId])
+  @@unique([materialId, number])
+}
+
+// Concept model for key terms and definitions
+model Concept {
+  id                String    @id @default(cuid())
+  materialId        String
+  material          Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  term              String
+  definition        String    @db.Text
+  category          ConceptCategory
+  pageReferences    Int[]
+  chapterNumber     Int?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([materialId])
+  @@index([category])
+}
+
+// Conversation model for Q&A sessions
+model Conversation {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId        String
+  material          Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  messages          Message[]
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@index([userId])
+  @@index([materialId])
+}
+
+// Message model for individual Q&A exchanges
+model Message {
+  id                String    @id @default(cuid())
+  conversationId    String
+  conversation      Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role              MessageRole
+  content           String    @db.Text
+  citations         Json?
+  
+  createdAt         DateTime  @default(now())
+  
+  @@index([conversationId])
+}
+
+// Enums
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
+}
+
+enum ConceptCategory {
+  DEFINITION
+  FORMULA
+  DATE
+  NAME
+  EVENT
+  OTHER
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+// TextChunk model to store full text for vector search results
+// Pinecone stores only vectors + small metadata, full text stored here
+model TextChunk {
+  id            String   @id // Same as Pinecone vector ID
+  materialId    String
+  text          String   @db.Text
+  pageNumber    Int
+  chapterNumber Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([materialId])
+}
