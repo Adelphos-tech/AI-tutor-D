@@ -1,9 +1,9 @@
 import 'dotenv/config'
-import { PrismaClient } from '@/generated/prisma/client'
-import { generateEmbedding } from '@/lib/gemini'
-import { index } from '@/lib/pinecone'
+import { PrismaClient } from '../src/generated/prisma/client'
+import { generateEmbedding } from '../src/lib/gemini'
+import { index } from '../src/lib/pinecone'
 import { readFile } from 'fs/promises'
-import pdfParse from 'pdf-parse'
+import * as pdfParse from 'pdf-parse'
 
 const prisma = new PrismaClient()
 
@@ -64,6 +64,11 @@ async function main() {
     for (let i = 0; i < limit; i++) {
       try {
         const embedding = await generateEmbedding(chunks[i])
+        
+        if (!index) {
+          console.warn('⚠️ Pinecone not configured - skipping vector upload')
+          break
+        }
         
         await index.upsert([{
           id: `${materialId}-chunk-${i}`,
