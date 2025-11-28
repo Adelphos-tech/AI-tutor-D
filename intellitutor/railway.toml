@@ -1,9 +1,6 @@
 [build]
 builder = "NIXPACKS"
 
-[build.env]
-DATABASE_URL = "postgresql://user:password@localhost:5432/intellitutor?schema=public"
-
 [deploy]
 startCommand = "npm start"
 restartPolicyType = "ON_FAILURE"
