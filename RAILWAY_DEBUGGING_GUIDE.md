@@ -65,18 +65,23 @@ npm error command sh -c prisma generate
 
 **Solution Applied:**
 1. Removed `postinstall` script from `package.json`
-2. Added dummy `DATABASE_URL` in `railway.toml` for build phase only
-3. Kept `prisma generate` in build script
+2. Set DATABASE_URL inline in build script command
+3. Railway.toml approach didn't work, inline env var is more reliable
 
 **Files Changed:**
 ```
-✅ intellitutor/package.json - Removed postinstall
-✅ intellitutor/railway.toml - Added build.env.DATABASE_URL
+✅ intellitutor/package.json - Removed postinstall, added inline DATABASE_URL to build script
+✅ intellitutor/railway.toml - Removed build.env (wasn't being picked up)
+```
+
+**Final Build Script:**
+```json
+"build": "DATABASE_URL=\"postgresql://dummy:dummy@localhost:5432/dummy\" prisma generate && next build"
 ```
 
 **How It Works:**
-- **Build Phase:** Uses dummy DATABASE_URL to generate Prisma Client
-- **Runtime:** Uses real DATABASE_URL from Railway environment variables
+- **Build Phase:** Inline env var sets dummy DATABASE_URL for `prisma generate`
+- **Runtime:** Real DATABASE_URL from Railway environment variables is used
 
 ---
 
@@ -100,9 +105,6 @@ npm error command sh -c prisma generate
 ```toml
 [build]
 builder = "NIXPACKS"
-
-[build.env]
-DATABASE_URL = "postgresql://user:password@localhost:5432/intellitutor?schema=public"
 
 [deploy]
 startCommand = "npm start"
@@ -360,7 +362,7 @@ If deployment fails catastrophically:
 |------|-------|----------|--------|
 | 2025-11-28 | Node.js 18 vs 20 | Added .node-version | 6c5c565 |
 | 2025-11-28 | nodejs-20_x error | Removed nixpacks.toml | 214a53d |
-| 2025-11-28 | DATABASE_URL build error | Added build.env, removed postinstall | ab2ecea |
+| 2025-11-28 | DATABASE_URL build error | Inline env var in build script | dbb073e |
 
 ---
 
