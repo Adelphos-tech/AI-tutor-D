@@ -276,7 +276,7 @@ export function useGoogleVoiceAssistant({ onTranscript, onError }: UseGoogleVoic
         
         // If it's Gemini voice, it returns PCM audio which needs to be wrapped as WAV
         if (isGeminiVoice && (mimeType.includes('pcm') || mimeType.includes('L16'))) {
-          audioData = createWavFile(audioData) as Uint8Array
+          audioData = new Uint8Array(createWavFile(audioData))
           mimeType = 'audio/wav'
         }
         
