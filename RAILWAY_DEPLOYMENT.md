@@ -47,19 +47,28 @@ UPLOAD_DIR=./uploads
 #### Settings:
 - **Root Directory:** `voice-backend`
 - **Build Command:** `pip install -r requirements.txt`
-- **Start Command:** `uvicorn main:app --host 0.0.0.0 --port $PORT`
+- **Start Command:** `uvicorn main_groq:app --host 0.0.0.0 --port $PORT`
 
 #### Required Environment Variables:
 ```env
-# Deepgram API
+# Deepgram API (for STT and TTS)
 DEEPGRAM_API_KEY=your_deepgram_api_key_here
 
-# Gemini API
+# Groq API (ultra-fast LLM - RECOMMENDED)
+GROQ_API_KEY=your_groq_api_key_here
+GROQ_MODEL=llama-3.3-70b-versatile
+
+# Optional: Gemini API (alternative LLM)
 GEMINI_API_KEY=your_gemini_api_key_here
 
 # CORS (use frontend URL)
 CORS_ORIGINS=https://${{Frontend.RAILWAY_PUBLIC_DOMAIN}}
+
+# Server Settings
+LOG_LEVEL=INFO
 ```
+
+**Note:** The backend now uses **Groq** for ultra-fast LLM inference (~10-50ms latency). To use Gemini instead, change Start Command to `uvicorn main:app --host 0.0.0.0 --port $PORT`
 
 ## Step-by-Step Deployment
 
@@ -140,10 +149,17 @@ NEXT_PUBLIC_VOICE_BACKEND_URL=wss://${{VoiceBackend.RAILWAY_PUBLIC_DOMAIN}}/ws
 
 ## API Keys Needed
 
-1. **Gemini API Key** - Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+1. **Groq API Key** - Get from [Groq Console](https://console.groq.com/)
 2. **Deepgram API Key** - Get from [Deepgram Console](https://console.deepgram.com/)
-3. **Pinecone API Key** - Already provided in memory
-4. **AWS Keys** (optional) - For S3 file storage
+3. **Gemini API Key** (optional) - Get from [Google AI Studio](https://makersuite.google.com/app/apikey)
+4. **Pinecone API Key** - Already provided in memory
+5. **AWS Keys** (optional) - For S3 file storage
+
+### Why Groq?
+- **Ultra-low latency**: ~10-50ms time-to-first-token (vs 400ms+ for Gemini/OpenAI)
+- **Fast inference**: Up to 700+ tokens/second
+- **Streaming support**: Real-time response generation
+- **Cost-effective**: Competitive pricing
 
 ## Generate NEXTAUTH_SECRET
 
