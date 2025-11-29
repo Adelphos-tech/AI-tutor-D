@@ -2,7 +2,7 @@ import type { Config } from 'tailwindcss'
 import tailwindcssAnimate from 'tailwindcss-animate'
 
 const config: Config = {
-  darkMode: 'class',
+  darkMode: 'class', // Fixed: was ['class'] which caused TypeScript error
   content: [
     './pages/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
