@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { chatAPI } from '../services/api';
 import ReactMarkdown from 'react-markdown';
@@ -29,13 +29,13 @@ const ChatSession = () => {
 
   useEffect(() => {
     fetchSession();
-  }, [sessionId]);
+  }, [sessionId, fetchSession]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, streamingMessage]);
 
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       setLoading(true);
       const response = await chatAPI.getSession(sessionId);
@@ -47,7 +47,7 @@ const ChatSession = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, navigate]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

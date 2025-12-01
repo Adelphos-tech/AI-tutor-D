@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import NaturalVoiceClient from '../services/naturalVoiceClient';
 import { getSession } from '../services/api';
@@ -31,7 +31,7 @@ const VoiceSession = () => {
   useEffect(() => {
     fetchSession();
     // Don't auto-initialize voice client - let user start it manually
-  }, [sessionId]);
+  }, [sessionId, fetchSession]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -42,7 +42,7 @@ const VoiceSession = () => {
     };
   }, []);
 
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     try {
       setLoading(true);
       const response = await getSession(sessionId);
@@ -54,7 +54,7 @@ const VoiceSession = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, navigate]);
 
   const initializeNaturalVoiceClient = async () => {
     try {

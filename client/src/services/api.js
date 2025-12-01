@@ -296,6 +296,9 @@ export class VoiceWebSocket {
             case 'error':
               this.onError?.(new Error(data.message));
               break;
+            default:
+              console.log('Unknown message type:', data.type);
+              break;
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);

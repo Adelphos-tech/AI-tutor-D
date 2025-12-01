@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { documentAPI, chatAPI } from '../services/api';
 import { 
@@ -28,9 +28,9 @@ const DocumentView = () => {
 
   useEffect(() => {
     fetchDocumentData();
-  }, [id]);
+  }, [id, fetchDocumentData]);
 
-  const fetchDocumentData = async () => {
+  const fetchDocumentData = useCallback(async () => {
     try {
       setLoading(true);
       const [docResponse, sessionsResponse] = await Promise.all([
@@ -47,7 +47,7 @@ const DocumentView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
   const createChatSession = async (sectionId, sessionType = 'text') => {
     try {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Upload, MessageCircle, Mic, Home, Brain } from 'lucide-react';
+import { Upload, Home, Brain } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const location = useLocation();
