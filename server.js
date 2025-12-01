@@ -56,8 +56,19 @@ app.use((err, req, res, next) => {
 // Initialize services and start server
 async function startServer() {
   try {
-    console.log('Initializing database...');
-    await initializeDatabase();
+    // Try to initialize database, but don't fail if it's not available
+    if (process.env.DATABASE_URL) {
+      console.log('Initializing database...');
+      try {
+        await initializeDatabase();
+        console.log('Database connected successfully');
+      } catch (error) {
+        console.error('Database connection failed:', error.message);
+        console.log('Continuing without database...');
+      }
+    } else {
+      console.log('No DATABASE_URL found, skipping database initialization');
+    }
     
     console.log('Initializing Pinecone...');
     await initializePinecone();
