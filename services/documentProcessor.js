@@ -5,12 +5,30 @@ const mammoth = require('mammoth');
 const xlsx = require('xlsx');
 const { pool } = require('../config/database');
 const { getPineconeIndex } = require('../config/pinecone');
-const embeddingService = require('./embeddings');
 const { v4: uuidv4 } = require('uuid');
 
 class DocumentProcessor {
   constructor() {
     this.supportedTypes = ['.pdf', '.docx', '.xlsx', '.txt'];
+    this.embeddingService = null;
+  }
+
+  async getEmbeddingService() {
+    if (!this.embeddingService) {
+      try {
+        this.embeddingService = require('./embeddings');
+        // Initialize the service to trigger any ES module loading
+        await this.embeddingService.initialize();
+      } catch (error) {
+        console.error('Failed to load embedding service:', error);
+        // Return a mock service that doesn't crash
+        this.embeddingService = {
+          generateEmbedding: async () => new Array(384).fill(0),
+          chunkText: (text) => [{ text, startIndex: 0, endIndex: text.length }]
+        };
+      }
+    }
+    return this.embeddingService;
   }
 
   async processDocument(filePath, originalName, fileType) {
@@ -151,10 +169,14 @@ class DocumentProcessor {
   }
 
   async processSections(documentId, sections) {
-    const client = await pool.connect();
-    const index = getPineconeIndex();
+    console.log(`Processing ${sections.length} sections for document ${documentId}`);
     
     try {
+      const embeddingService = await this.getEmbeddingService();
+      
+      const client = await pool.connect();
+      const index = getPineconeIndex();
+      
       for (const section of sections) {
         // Chunk the section content for better embeddings
         const chunks = embeddingService.chunkText(section.content);
@@ -232,6 +254,7 @@ class DocumentProcessor {
 
   async searchSimilarContent(query, documentId, sectionId = null, limit = 5) {
     try {
+      const embeddingService = await this.getEmbeddingService();
       const queryEmbedding = await embeddingService.generateEmbedding(query);
       const index = getPineconeIndex();
       

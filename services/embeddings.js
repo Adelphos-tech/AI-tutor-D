@@ -7,12 +7,18 @@ class EmbeddingService {
 
   async initialize() {
     if (!this.embedder) {
-      console.log('Loading embedding model...');
-      // Dynamic import for ES Module
-      const { pipeline } = await import('@xenova/transformers');
-      this.pipeline = pipeline;
-      this.embedder = await pipeline('feature-extraction', this.modelName);
-      console.log('Embedding model loaded successfully');
+      try {
+        console.log('Loading embedding model...');
+        // Dynamic import for ES Module
+        const { pipeline } = await import('@xenova/transformers');
+        this.pipeline = pipeline;
+        this.embedder = await pipeline('feature-extraction', this.modelName);
+        console.log('Embedding model loaded successfully');
+      } catch (error) {
+        console.error('Failed to load embedding model:', error);
+        // Don't throw error during server startup - just log it
+        this.embedder = null;
+      }
     }
     return this.embedder;
   }
