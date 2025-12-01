@@ -162,9 +162,18 @@ class NaturalVoiceClient {
       console.log(`📝 Transcript (${isFinal ? 'final' : 'interim'}): "${transcript}"`);
       this.onTranscript?.(transcript, isFinal, confidence);
 
+      // Stop AI speech immediately when user starts talking (even on interim transcripts)
+      if (transcript.trim().length > 2 && this.isPlaying) {
+        console.log('🛑 User started speaking - interrupting AI response');
+        this.stopCurrentAudio();
+      }
+
       // Process final transcripts for conversation
       if (isFinal && transcript.trim().length > 2) {
-        this.processUserMessage(transcript.trim());
+        // Small delay to ensure audio interruption is complete
+        setTimeout(() => {
+          this.processUserMessage(transcript.trim());
+        }, 100);
       }
     }
   }
@@ -303,6 +312,9 @@ class NaturalVoiceClient {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.isPlaying = false;
+      
+      // Update status to show interruption
+      this.onStatusChange?.('listening');
     }
   }
 
