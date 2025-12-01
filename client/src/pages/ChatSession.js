@@ -27,14 +27,6 @@ const ChatSession = () => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  useEffect(() => {
-    fetchSession();
-  }, [sessionId, fetchSession]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingMessage]);
-
   const fetchSession = useCallback(async () => {
     try {
       setLoading(true);
@@ -48,6 +40,14 @@ const ChatSession = () => {
       setLoading(false);
     }
   }, [sessionId, navigate]);
+
+  useEffect(() => {
+    fetchSession();
+  }, [sessionId, fetchSession]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, streamingMessage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

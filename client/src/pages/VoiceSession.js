@@ -28,20 +28,6 @@ const VoiceSession = () => {
   
   const voiceClientRef = useRef(null);
 
-  useEffect(() => {
-    fetchSession();
-    // Don't auto-initialize voice client - let user start it manually
-  }, [sessionId, fetchSession]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (voiceClientRef.current) {
-        voiceClientRef.current.disconnect();
-      }
-    };
-  }, []);
-
   const fetchSession = useCallback(async () => {
     try {
       setLoading(true);
@@ -55,6 +41,20 @@ const VoiceSession = () => {
       setLoading(false);
     }
   }, [sessionId, navigate]);
+
+  useEffect(() => {
+    fetchSession();
+    // Don't auto-initialize voice client - let user start it manually
+  }, [sessionId, fetchSession]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceClientRef.current) {
+        voiceClientRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const initializeNaturalVoiceClient = async () => {
     try {

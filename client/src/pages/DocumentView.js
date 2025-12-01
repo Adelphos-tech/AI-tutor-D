@@ -26,10 +26,6 @@ const DocumentView = () => {
   const [selectedSection, setSelectedSection] = useState(null);
   const [creatingSession, setCreatingSession] = useState(false);
 
-  useEffect(() => {
-    fetchDocumentData();
-  }, [id, fetchDocumentData]);
-
   const fetchDocumentData = useCallback(async () => {
     try {
       setLoading(true);
@@ -48,6 +44,10 @@ const DocumentView = () => {
       setLoading(false);
     }
   }, [id]);
+
+  useEffect(() => {
+    fetchDocumentData();
+  }, [id, fetchDocumentData]);
 
   const createChatSession = async (sectionId, sessionType = 'text') => {
     try {
