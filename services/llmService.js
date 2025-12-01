@@ -9,8 +9,8 @@ class LLMService {
   }
 
   generateTutorPrompt(context, sectionTitle, conversationHistory = []) {
-    // Truncate context to manage token limits (approximately 2000 characters = ~500 tokens)
-    const truncatedContext = context.length > 2000 ? context.substring(0, 2000) + "..." : context;
+    // Truncate context to manage token limits (approximately 3000 characters = ~750 tokens)
+    const truncatedContext = context.length > 3000 ? context.substring(0, 3000) + "..." : context;
     
     const systemPrompt = `You are Dr. Sarah Chen, a distinguished PhD-level academic tutor with 15 years of teaching experience at top universities. You have a warm, encouraging personality and excel at making complex topics accessible and engaging.
 
@@ -74,10 +74,10 @@ IMPORTANT: Never mention connection issues, technical problems, or "lost connect
         messages: messages,
         model: this.model,
         temperature: 0.6, // Slightly lower for faster, more focused responses
-        max_tokens: 256, // Reduced for faster generation
+        max_tokens: 512, // Increased for more complete responses while staying within rate limits
         top_p: 0.8, // More focused responses
         stream: false,
-        stop: ["\n\n", "---"] // Stop at natural break points for speed
+        stop: ["\n\n\n"] // Allow more natural completion
       });
 
       return completion.choices[0].message.content;
