@@ -174,29 +174,39 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     client.release();
     
     // Get relevant context using RAG
-    const similarContent = await documentProcessor.searchSimilarContent(
-      message, 
-      session.document_id, 
-      session.section_id,
-      3
-    );
-    
-    // Combine section content with similar chunks
     let context = session.content;
-    if (similarContent.length > 0) {
-      const additionalContext = similarContent
-        .map(chunk => chunk.content)
-        .join('\n\n');
-      context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
+    try {
+      console.log('Searching for similar content...');
+      const similarContent = await documentProcessor.searchSimilarContent(
+        message, 
+        session.document_id, 
+        session.section_id,
+        3
+      );
+      
+      // Combine section content with similar chunks
+      if (similarContent.length > 0) {
+        const additionalContext = similarContent
+          .map(chunk => chunk.content)
+          .join('\n\n');
+        context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
+      }
+      console.log('Similar content search completed');
+    } catch (error) {
+      console.error('Error in similarity search:', error);
+      // Continue with basic context if RAG fails
+      console.log('Continuing with basic context only');
     }
     
     // Generate AI response
+    console.log('Generating AI response...');
     const aiResponse = await llmService.generateResponse(
       message,
       context,
       session.section_title,
       conversationHistory
     );
+    console.log('AI response generated successfully');
     
     // Save AI response
     const client2 = await pool.connect();
