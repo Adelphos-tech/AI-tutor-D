@@ -136,6 +136,12 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     const sessionId = parseInt(req.params.sessionId);
     const { message } = req.body;
     
+    console.log('🔍 Session details:', { 
+      rawSessionId: req.params.sessionId, 
+      parsedSessionId: sessionId,
+      isValidNumber: !isNaN(sessionId)
+    });
+    
     if (!message || !message.trim()) {
       console.log('❌ Empty message received');
       return res.status(400).json({ error: 'Message is required' });
@@ -184,9 +190,16 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
           const session = sessionResult.rows[0];
           sessionTitle = session.section_title;
           aiContext = session.content;
-          console.log('✅ Enhanced context loaded from database');
+          console.log('✅ Enhanced context loaded from database:', {
+            sessionId: session.id,
+            documentId: session.document_id,
+            sectionId: session.section_id,
+            sectionTitle: session.section_title,
+            hasContent: !!session.content,
+            contentPreview: session.content ? session.content.substring(0, 100) + '...' : 'No content'
+          });
         } else {
-          console.log('⚠️ Session not found, using basic context');
+          console.log('⚠️ Session not found in database, using basic context');
         }
       } catch (queryError) {
         console.error('❌ Session query failed, using basic context:', queryError);
