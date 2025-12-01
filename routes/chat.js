@@ -144,9 +144,36 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     // Try full functionality with comprehensive error handling
     console.log('🚀 Attempting full AI tutor functionality...');
     
+    // Check if database is available
+    if (!process.env.DATABASE_URL) {
+      console.log('⚠️ No DATABASE_URL found, using simple response');
+      const simpleResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm ready to help you with your studies! What would you like to learn about?`;
+      return res.json({
+        success: true,
+        userMessage: message,
+        aiResponse: simpleResponse,
+        relevantChunks: 0,
+        mode: 'simple'
+      });
+    }
+    
     console.log('🔗 Connecting to database...');
-    const client = await pool.connect();
-    console.log('✅ Database connected successfully');
+    let client;
+    try {
+      client = await pool.connect();
+      console.log('✅ Database connected successfully');
+    } catch (dbError) {
+      console.error('❌ Database connection failed:', dbError);
+      const fallbackResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm having trouble connecting to my knowledge base right now, but I'm still here to help you with your studies!`;
+      return res.json({
+        success: true,
+        userMessage: message,
+        aiResponse: fallbackResponse,
+        relevantChunks: 0,
+        mode: 'fallback',
+        error: 'Database connection failed'
+      });
+    }
     
     // Get session and section info (with optional document section)
     console.log('🔍 Querying session data...');
@@ -244,39 +271,53 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       console.log('No document context available, using general context');
     }
     
-    // Generate AI response
+    // Generate AI response with timeout
     console.log('🤖 Generating AI response...');
     let aiResponse;
     try {
-      aiResponse = await llmService.generateResponse(
+      // Add timeout to prevent hanging
+      const responsePromise = llmService.generateResponse(
         message,
         context,
         session.section_title,
         conversationHistory
       );
+      
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('LLM response timeout')), 10000)
+      );
+      
+      aiResponse = await Promise.race([responsePromise, timeoutPromise]);
       console.log('✅ AI response generated successfully');
     } catch (llmError) {
       console.error('❌ LLM service failed:', llmError);
-      // Provide a fallback response
-      aiResponse = "I apologize, but I'm experiencing some technical difficulties right now. Could you please try asking your question again?";
-      console.log('🔄 Using fallback response');
+      // Provide a helpful fallback response
+      aiResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm having some technical difficulties with my advanced AI processing right now, but I'm still here to help you learn! What specific topic would you like to explore?`;
+      console.log('🔄 Using intelligent fallback response');
     }
     
-    // Save AI response
-    const client2 = await pool.connect();
-    await client2.query(`
-      INSERT INTO chat_messages (session_id, role, content)
-      VALUES ($1, 'assistant', $2)
-    `, [sessionId, aiResponse]);
-    
-    // Update session activity
-    await client2.query(`
-      UPDATE chat_sessions 
-      SET last_activity = CURRENT_TIMESTAMP, message_count = message_count + 2
-      WHERE id = $1
-    `, [sessionId]);
-    
-    client2.release();
+    // Save AI response (optional - don't fail if this doesn't work)
+    try {
+      const client2 = await pool.connect();
+      await client2.query(`
+        INSERT INTO chat_messages (session_id, role, content)
+        VALUES ($1, 'assistant', $2)
+      `, [sessionId, aiResponse]);
+      
+      // Update session activity
+      await client2.query(`
+        UPDATE chat_sessions 
+        SET last_activity = CURRENT_TIMESTAMP, message_count = message_count + 2
+        WHERE id = $1
+      `, [sessionId]);
+      
+      client2.release();
+      console.log('✅ Message saved to database');
+    } catch (saveError) {
+      console.error('⚠️ Failed to save message to database:', saveError);
+      // Don't fail the request if we can't save to database
+      console.log('🔄 Continuing without saving to database');
+    }
     
     res.json({
       success: true,
