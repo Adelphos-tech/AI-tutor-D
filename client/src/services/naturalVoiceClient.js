@@ -30,26 +30,18 @@ class NaturalVoiceClient {
       console.log('🎙️ Connecting to Deepgram for natural conversation...');
       this.onStatusChange?.('connecting');
 
-      // Create live transcription connection with optimal settings for conversation
-      this.connection = this.deepgram.listen.live({
+      // Create live transcription connection optimized for low latency
+      const deepgramConfig = {
         model: 'nova-2',
         language: 'en-US',
-        smart_format: true,
+        smart_format: false, // Disable for speed
         interim_results: true,
-        utterance_end_ms: 1000,
         vad_events: true,
-        endpointing: 300,
-        punctuate: true,
-        diarize: false,
-        multichannel: false,
-        alternatives: 1,
-        numerals: true,
-        search: [],
-        replace: [],
-        keywords: [],
-        profanity_filter: false,
-        redact: []
-      });
+        endpointing: 200, // Faster endpoint detection
+        no_delay: true, // Reduce processing delay
+        punctuate: false, // Skip punctuation for speed
+        profanity_filter: false // Skip filtering for speed
+      };
 
       // Set up event handlers
       this.connection.on(LiveTranscriptionEvents.Open, () => {

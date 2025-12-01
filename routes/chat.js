@@ -130,34 +130,66 @@ router.get('/sessions/:sessionId', async (req, res) => {
 
 // Send message in chat session
 router.post('/sessions/:sessionId/messages', async (req, res) => {
+  console.log(`📨 Received message for session ${req.params.sessionId}:`, req.body);
+  
   try {
     const sessionId = parseInt(req.params.sessionId);
     const { message } = req.body;
     
     if (!message || !message.trim()) {
+      console.log('❌ Empty message received');
       return res.status(400).json({ error: 'Message is required' });
     }
     
+    console.log('🔗 Connecting to database...');
     const client = await pool.connect();
+    console.log('✅ Database connected successfully');
     
     // Get session and section info (with optional document section)
-    const sessionResult = await client.query(`
-      SELECT cs.*, 
-             COALESCE(ds.section_title, 'General Discussion') as section_title, 
-             COALESCE(ds.content, 'No specific document context available. I can help with general academic questions.') as content,
-             cs.document_id
-      FROM chat_sessions cs
-      LEFT JOIN document_sections ds ON cs.section_id = ds.id
-      WHERE cs.id = $1
-    `, [sessionId]);
+    console.log('🔍 Querying session data...');
+    let sessionResult;
+    try {
+      sessionResult = await client.query(`
+        SELECT cs.*, 
+               COALESCE(ds.section_title, 'General Discussion') as section_title, 
+               COALESCE(ds.content, 'No specific document context available. I can help with general academic questions.') as content,
+               cs.document_id
+        FROM chat_sessions cs
+        LEFT JOIN document_sections ds ON cs.section_id = ds.id
+        WHERE cs.id = $1
+      `, [sessionId]);
+      console.log('✅ Session query completed');
+    } catch (queryError) {
+      console.error('❌ Session query failed:', queryError);
+      client.release();
+      return res.status(500).json({ error: 'Database query failed', details: queryError.message });
+    }
     
     if (sessionResult.rows.length === 0) {
-      client.release();
-      return res.status(404).json({ error: 'Chat session not found' });
+      console.log('❌ Session not found, creating default session...');
+      // Create a default session if it doesn't exist
+      try {
+        const createResult = await client.query(`
+          INSERT INTO chat_sessions (document_id, section_id, session_name)
+          VALUES (NULL, NULL, 'Voice Chat Session')
+          RETURNING *
+        `);
+        const newSession = {
+          ...createResult.rows[0],
+          section_title: 'General Discussion',
+          content: 'No specific document context available. I can help with general academic questions.'
+        };
+        console.log('✅ Created default session:', newSession.id);
+        sessionResult = { rows: [newSession] };
+      } catch (createError) {
+        console.error('❌ Failed to create default session:', createError);
+        client.release();
+        return res.status(500).json({ error: 'Failed to create session', details: createError.message });
+      }
     }
     
     const session = sessionResult.rows[0];
-    console.log('Session loaded:', { id: session.id, section_title: session.section_title });
+    console.log('✅ Session loaded:', { id: session.id, section_title: session.section_title });
     
     // Get conversation history
     const historyResult = await client.query(`
@@ -210,14 +242,22 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     }
     
     // Generate AI response
-    console.log('Generating AI response...');
-    const aiResponse = await llmService.generateResponse(
-      message,
-      context,
-      session.section_title,
-      conversationHistory
-    );
-    console.log('AI response generated successfully');
+    console.log('🤖 Generating AI response...');
+    let aiResponse;
+    try {
+      aiResponse = await llmService.generateResponse(
+        message,
+        context,
+        session.section_title,
+        conversationHistory
+      );
+      console.log('✅ AI response generated successfully');
+    } catch (llmError) {
+      console.error('❌ LLM service failed:', llmError);
+      // Provide a fallback response
+      aiResponse = "I apologize, but I'm experiencing some technical difficulties right now. Could you please try asking your question again?";
+      console.log('🔄 Using fallback response');
+    }
     
     // Save AI response
     const client2 = await pool.connect();

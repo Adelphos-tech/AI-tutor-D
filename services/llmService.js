@@ -5,7 +5,7 @@ class LLMService {
     this.groq = new Groq({
       apiKey: process.env.GROQ_API_KEY
     });
-    this.model = 'llama-3.1-8b-instant'; // Updated model - fast and capable
+    this.model = 'llama-3.1-8b-instant'; // Fastest Groq model for low latency
   }
 
   generateTutorPrompt(context, sectionTitle, conversationHistory = []) {
@@ -73,10 +73,11 @@ IMPORTANT: Never mention connection issues, technical problems, or "lost connect
       const completion = await this.groq.chat.completions.create({
         messages: messages,
         model: this.model,
-        temperature: 0.7,
-        max_tokens: 512, // Reduced to manage token limits
-        top_p: 0.9,
-        stream: false
+        temperature: 0.6, // Slightly lower for faster, more focused responses
+        max_tokens: 256, // Reduced for faster generation
+        top_p: 0.8, // More focused responses
+        stream: false,
+        stop: ["\n\n", "---"] // Stop at natural break points for speed
       });
 
       return completion.choices[0].message.content;
