@@ -144,132 +144,60 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     // Try full functionality with comprehensive error handling
     console.log('🚀 Attempting full AI tutor functionality...');
     
-    // Check if database is available
-    if (!process.env.DATABASE_URL) {
-      console.log('⚠️ No DATABASE_URL found, using simple response');
-      const simpleResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm ready to help you with your studies! What would you like to learn about?`;
-      return res.json({
-        success: true,
-        userMessage: message,
-        aiResponse: simpleResponse,
-        relevantChunks: 0,
-        mode: 'simple'
-      });
-    }
+    // Try to use LLM service for intelligent responses
+    console.log('🤖 Attempting AI response generation...');
     
-    console.log('🔗 Connecting to database...');
-    let client;
+    // Set up basic context for AI response
+    let aiContext = "You are Dr. Sarah Chen, a PhD-level academic tutor. Provide helpful, educational responses to student questions.";
+    let sessionTitle = "General Academic Discussion";
+    let chatHistory = [];
+    
+    // Try to get database context if available
+    console.log('🔗 Attempting database connection...');
+    let client = null;
+    let hasDatabase = false;
+    
     try {
       client = await pool.connect();
       console.log('✅ Database connected successfully');
+      hasDatabase = true;
     } catch (dbError) {
-      console.error('❌ Database connection failed:', dbError);
-      const fallbackResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm having trouble connecting to my knowledge base right now, but I'm still here to help you with your studies!`;
-      return res.json({
-        success: true,
-        userMessage: message,
-        aiResponse: fallbackResponse,
-        relevantChunks: 0,
-        mode: 'fallback',
-        error: 'Database connection failed'
-      });
+      console.error('❌ Database connection failed, continuing with basic context:', dbError);
+      hasDatabase = false;
     }
     
-    // Get session and section info (with optional document section)
-    console.log('🔍 Querying session data...');
-    let sessionResult;
-    try {
-      sessionResult = await client.query(`
-        SELECT cs.*, 
-               COALESCE(ds.section_title, 'General Discussion') as section_title, 
-               COALESCE(ds.content, 'No specific document context available. I can help with general academic questions.') as content,
-               cs.document_id
-        FROM chat_sessions cs
-        LEFT JOIN document_sections ds ON cs.section_id = ds.id
-        WHERE cs.id = $1
-      `, [sessionId]);
-      console.log('✅ Session query completed');
-    } catch (queryError) {
-      console.error('❌ Session query failed:', queryError);
-      client.release();
-      return res.status(500).json({ error: 'Database query failed', details: queryError.message });
-    }
-    
-    if (sessionResult.rows.length === 0) {
-      console.log('❌ Session not found, creating default session...');
-      // Create a default session if it doesn't exist
+    // Get enhanced context from database if available
+    if (hasDatabase && client) {
+      console.log('🔍 Querying session data...');
       try {
-        const createResult = await client.query(`
-          INSERT INTO chat_sessions (document_id, section_id, session_name)
-          VALUES (NULL, NULL, 'Voice Chat Session')
-          RETURNING *
-        `);
-        const newSession = {
-          ...createResult.rows[0],
-          section_title: 'General Discussion',
-          content: 'No specific document context available. I can help with general academic questions.'
-        };
-        console.log('✅ Created default session:', newSession.id);
-        sessionResult = { rows: [newSession] };
-      } catch (createError) {
-        console.error('❌ Failed to create default session:', createError);
-        client.release();
-        return res.status(500).json({ error: 'Failed to create session', details: createError.message });
-      }
-    }
-    
-    const session = sessionResult.rows[0];
-    console.log('✅ Session loaded:', { id: session.id, section_title: session.section_title });
-    
-    // Get conversation history
-    const historyResult = await client.query(`
-      SELECT role, content FROM chat_messages
-      WHERE session_id = $1
-      ORDER BY timestamp ASC
-      LIMIT 20
-    `, [sessionId]);
-    
-    const conversationHistory = historyResult.rows;
-    
-    // Save user message
-    await client.query(`
-      INSERT INTO chat_messages (session_id, role, content)
-      VALUES ($1, 'user', $2)
-    `, [sessionId, message]);
-    
-    client.release();
-    
-    // Get relevant context using RAG
-    let context = session.content;
-    let similarContent = [];
-    
-    // Only search for similar content if we have a valid document
-    if (session.document_id && session.section_id) {
-      try {
-        console.log('Searching for similar content...');
-        similarContent = await documentProcessor.searchSimilarContent(
-          message, 
-          session.document_id, 
-          session.section_id,
-          3
-        );
+        const sessionResult = await client.query(`
+          SELECT cs.*, 
+                 COALESCE(ds.section_title, 'General Discussion') as section_title, 
+                 COALESCE(ds.content, 'No specific document context available. I can help with general academic questions.') as content,
+                 cs.document_id
+          FROM chat_sessions cs
+          LEFT JOIN document_sections ds ON cs.section_id = ds.id
+          WHERE cs.id = $1
+        `, [sessionId]);
         
-        // Combine section content with similar chunks
-        if (similarContent.length > 0) {
-          const additionalContext = similarContent
-            .map(chunk => chunk.content)
-            .join('\n\n');
-          context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
+        if (sessionResult.rows.length > 0) {
+          const session = sessionResult.rows[0];
+          sessionTitle = session.section_title;
+          aiContext = session.content;
+          console.log('✅ Enhanced context loaded from database');
+        } else {
+          console.log('⚠️ Session not found, using basic context');
         }
-        console.log('Similar content search completed');
-      } catch (error) {
-        console.error('Error in similarity search:', error);
-        // Continue with basic context if RAG fails
-        console.log('Continuing with basic context only');
+      } catch (queryError) {
+        console.error('❌ Session query failed, using basic context:', queryError);
       }
     } else {
-      console.log('No document context available, using general context');
+      console.log('📝 Using basic academic tutor context (no database)');
     }
+    // Now proceed with AI response generation using available context
+    console.log('🎯 Context prepared:', { sessionTitle, hasDatabase });
+    // Skip RAG search for now, use the context we have
+    console.log('📚 Using prepared context for AI response');
     
     // Generate AI response with timeout
     console.log('🤖 Generating AI response...');
@@ -278,9 +206,9 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       // Add timeout to prevent hanging
       const responsePromise = llmService.generateResponse(
         message,
-        context,
-        session.section_title,
-        conversationHistory
+        aiContext,
+        sessionTitle,
+        chatHistory
       );
       
       const timeoutPromise = new Promise((_, reject) => 
@@ -323,7 +251,8 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       success: true,
       userMessage: message,
       aiResponse: aiResponse,
-      relevantChunks: similarContent.length
+      relevantChunks: 0,
+      mode: hasDatabase ? 'enhanced' : 'basic'
     });
   } catch (error) {
     console.error('❌ Error in full functionality, using fallback response:', error);
