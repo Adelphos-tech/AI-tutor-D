@@ -7,6 +7,20 @@ const documentProcessor = require('../services/documentProcessor');
 
 const router = express.Router();
 
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '..', 'uploads');
+fs.ensureDirSync(uploadsDir);
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    uploadsDir: uploadsDir,
+    uploadsDirExists: fs.existsSync(uploadsDir),
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Configure multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -38,14 +52,50 @@ const upload = multer({
 });
 
 // Upload and process document
-router.post('/upload', upload.single('document'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+router.post('/upload', (req, res) => {
+  // Handle multer errors first
+  upload.single('document')(req, res, async (err) => {
+    if (err) {
+      console.error('❌ Multer upload error:', err);
+      
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ 
+          error: 'File too large',
+          message: 'File size exceeds 50MB limit'
+        });
+      }
+      
+      if (err.message.includes('Unsupported file type')) {
+        return res.status(400).json({ 
+          error: 'Unsupported file type',
+          message: err.message
+        });
+      }
+      
+      return res.status(500).json({ 
+        error: 'Upload failed',
+        message: err.message || 'Unknown upload error'
+      });
     }
 
-    const { originalname, filename, path: filePath } = req.file;
-    const fileType = path.extname(originalname).toLowerCase();
+    try {
+      if (!req.file) {
+        return res.status(400).json({ 
+          error: 'No file uploaded',
+          message: 'Please select a file to upload'
+        });
+      }
+
+      const { originalname, filename, path: filePath } = req.file;
+      const fileType = path.extname(originalname).toLowerCase();
+      
+      console.log('📁 File uploaded successfully:', {
+        originalname,
+        filename,
+        filePath,
+        fileType,
+        size: req.file.size
+      });
 
     // Start document processing asynchronously with progress tracking
     console.log('🚀 Starting async document processing for:', originalname);
@@ -60,6 +110,13 @@ router.post('/upload', upload.single('document'), async (req, res) => {
       })
       .catch(error => {
         console.error('❌ Document processing failed:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          filePath,
+          originalname,
+          fileType
+        });
       });
     
     res.json({
@@ -76,13 +133,14 @@ router.post('/upload', upload.single('document'), async (req, res) => {
         'completing'
       ]
     });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ 
-      error: 'Failed to upload document',
-      message: error.message 
-    });
-  }
+    } catch (error) {
+      console.error('❌ Processing error:', error);
+      res.status(500).json({ 
+        error: 'Failed to process document',
+        message: error.message 
+      });
+    }
+  });
 });
 
 // Get processing progress
