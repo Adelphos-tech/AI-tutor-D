@@ -1,14 +1,16 @@
-const { pipeline } = require('@xenova/transformers');
-
 class EmbeddingService {
   constructor() {
     this.embedder = null;
     this.modelName = 'Xenova/all-MiniLM-L6-v2'; // Lightweight, fast embedding model
+    this.pipeline = null;
   }
 
   async initialize() {
     if (!this.embedder) {
       console.log('Loading embedding model...');
+      // Dynamic import for ES Module
+      const { pipeline } = await import('@xenova/transformers');
+      this.pipeline = pipeline;
       this.embedder = await pipeline('feature-extraction', this.modelName);
       console.log('Embedding model loaded successfully');
     }
