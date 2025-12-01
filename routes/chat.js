@@ -140,6 +140,18 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       console.log('❌ Empty message received');
       return res.status(400).json({ error: 'Message is required' });
     }
+
+    // TEMPORARY: Simple response without database/LLM to test basic functionality
+    console.log('🧪 Using temporary simple response for testing');
+    const simpleResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm currently in testing mode, but I'm ready to help you with your studies!`;
+    
+    return res.json({
+      success: true,
+      userMessage: message,
+      aiResponse: simpleResponse,
+      relevantChunks: 0,
+      testMode: true
+    });
     
     console.log('🔗 Connecting to database...');
     const client = await pool.connect();
