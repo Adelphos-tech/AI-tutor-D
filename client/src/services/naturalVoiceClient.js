@@ -63,6 +63,16 @@ class NaturalVoiceClient {
         profanity_filter: false // Skip filtering for speed
       };
 
+      // Create the connection
+      console.log('🔗 Creating Deepgram live connection...');
+      this.connection = this.deepgram.listen.live(deepgramConfig);
+      
+      if (!this.connection) {
+        throw new Error('Failed to create Deepgram connection');
+      }
+      
+      console.log('✅ Deepgram connection created');
+
       // Set up event handlers
       this.connection.on(LiveTranscriptionEvents.Open, () => {
         console.log('✅ Deepgram connection opened - ready for conversation');
