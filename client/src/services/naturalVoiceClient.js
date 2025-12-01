@@ -30,6 +30,26 @@ class NaturalVoiceClient {
       console.log('🎙️ Connecting to Deepgram for natural conversation...');
       this.onStatusChange?.('connecting');
 
+      // Request microphone permission first
+      console.log('🎤 Requesting microphone permission...');
+      try {
+        this.audioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            sampleRate: 16000,
+            channelCount: 1,
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        console.log('✅ Microphone permission granted');
+      } catch (micError) {
+        console.error('❌ Microphone permission denied:', micError);
+        this.onError?.('Microphone permission denied. Please allow microphone access and try again.');
+        this.onStatusChange?.('error');
+        return;
+      }
+
       // Create live transcription connection optimized for low latency
       const deepgramConfig = {
         model: 'nova-2',
@@ -84,16 +104,12 @@ class NaturalVoiceClient {
 
       console.log('🎧 Starting continuous listening...');
       
-      // Get microphone access
-      this.audioStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: 16000,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true
-        }
-      });
+      // Use already granted microphone access
+      if (!this.audioStream) {
+        console.error('❌ No audio stream available');
+        this.onError?.('Microphone not available. Please refresh and allow microphone access.');
+        return;
+      }
 
       // Create MediaRecorder for streaming
       this.mediaRecorder = new MediaRecorder(this.audioStream, {
