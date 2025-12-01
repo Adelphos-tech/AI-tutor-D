@@ -47,27 +47,34 @@ router.post('/upload', upload.single('document'), async (req, res) => {
     const { originalname, filename, path: filePath } = req.file;
     const fileType = path.extname(originalname).toLowerCase();
 
-    // Start document processing asynchronously (don't wait for completion)
+    // Start document processing asynchronously with progress tracking
     console.log('🚀 Starting async document processing for:', originalname);
+    
+    // Generate processing ID for tracking
+    const processingId = `proc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     // Process document in background without blocking the response
     documentProcessor.processDocument(filePath, originalname, fileType)
-      .then(documentId => {
-        console.log('✅ Document processing completed for ID:', documentId);
+      .then(result => {
+        console.log('✅ Document processing completed:', result);
       })
       .catch(error => {
         console.error('❌ Document processing failed:', error);
       });
-
-    // Return immediate response with temporary ID
-    const tempDocumentId = Date.now(); // Temporary ID until processing completes
     
     res.json({
       success: true,
-      documentId: tempDocumentId,
-      message: 'Document uploaded successfully. Processing in background...',
+      processingId: processingId,
+      message: 'Document uploaded successfully. Processing started...',
       filename: originalname,
-      processing: true
+      processing: true,
+      stages: [
+        'extracting',
+        'segmenting', 
+        'saving',
+        'embeddings',
+        'completing'
+      ]
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -76,6 +83,48 @@ router.post('/upload', upload.single('document'), async (req, res) => {
       message: error.message 
     });
   }
+});
+
+// Get processing progress
+router.get('/progress/:processingId', (req, res) => {
+  const { processingId } = req.params;
+  
+  // Set up Server-Sent Events for real-time progress
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  // Listen for progress events from document processor
+  const progressHandler = (progressData) => {
+    if (progressData.processingId === processingId) {
+      res.write(`data: ${JSON.stringify(progressData)}\n\n`);
+      
+      // Close connection when processing is complete or failed
+      if (progressData.stage === 'completed' || progressData.stage === 'error') {
+        res.end();
+      }
+    }
+  };
+
+  documentProcessor.on('progress', progressHandler);
+
+  // Clean up on client disconnect
+  req.on('close', () => {
+    documentProcessor.removeListener('progress', progressHandler);
+    res.end();
+  });
+
+  // Send initial connection confirmation
+  res.write(`data: ${JSON.stringify({
+    processingId,
+    stage: 'connected',
+    progress: 0,
+    message: 'Connected to progress stream'
+  })}\n\n`);
 });
 
 // Get all documents

@@ -18,6 +18,7 @@ const DocumentUpload = () => {
     files: [],
     uploading: false,
     progress: {},
+    processingMessages: {},
     completed: [],
     errors: []
   });
@@ -90,41 +91,51 @@ const DocumentUpload = () => {
         );
 
         // Show processing stage after upload completes
-        if (response.processing) {
-          setUploadState(prev => ({
-            ...prev,
-            progress: {
-              ...prev.progress,
-              [fileItem.id]: 100 // Show as processing
-            }
-          }));
-
-          // Simulate processing progress (since it's async on server)
-          let processingProgress = 100;
-          const processingInterval = setInterval(() => {
-            processingProgress = Math.min(processingProgress + 2, 100);
+        if (response.processing && response.processingId) {
+          // Connect to real-time progress stream
+          const eventSource = new EventSource(`/api/documents/progress/${response.processingId}`);
+          
+          eventSource.onmessage = (event) => {
+            const progressData = JSON.parse(event.data);
+            
             setUploadState(prev => ({
               ...prev,
               progress: {
                 ...prev.progress,
-                [fileItem.id]: processingProgress
+                [fileItem.id]: progressData.progress
+              },
+              processingMessages: {
+                ...prev.processingMessages,
+                [fileItem.id]: progressData.message
               }
             }));
 
-            if (processingProgress >= 100) {
-              clearInterval(processingInterval);
-              // Mark as completed after processing simulation
-              setTimeout(() => {
-                setUploadState(prev => ({
-                  ...prev,
-                  completed: [...prev.completed, {
-                    ...fileItem,
-                    documentId: response.documentId
-                  }]
-                }));
-              }, 1000);
+            // Mark as completed when processing finishes
+            if (progressData.stage === 'completed') {
+              eventSource.close();
+              setUploadState(prev => ({
+                ...prev,
+                completed: [...prev.completed, {
+                  ...fileItem,
+                  documentId: progressData.documentId || response.processingId
+                }]
+              }));
+            } else if (progressData.stage === 'error') {
+              eventSource.close();
+              setUploadState(prev => ({
+                ...prev,
+                errors: [...prev.errors, {
+                  name: fileItem.name,
+                  error: progressData.message
+                }]
+              }));
             }
-          }, 200);
+          };
+
+          eventSource.onerror = () => {
+            eventSource.close();
+            console.error('Progress stream error for file:', fileItem.name);
+          };
         } else {
           setUploadState(prev => ({
             ...prev,
@@ -300,9 +311,11 @@ const DocumentUpload = () => {
                         </div>
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
                           <span>
-                            {uploadState.progress[fileItem.id] < 100 
-                              ? `${Math.round((fileItem.size * uploadState.progress[fileItem.id]) / 100 / 1024)} KB uploaded`
-                              : 'Generating embeddings...'
+                            {uploadState.processingMessages[fileItem.id] || 
+                              (uploadState.progress[fileItem.id] < 100 
+                                ? `${Math.round((fileItem.size * uploadState.progress[fileItem.id]) / 100 / 1024)} KB uploaded`
+                                : 'Processing...'
+                              )
                             }
                           </span>
                           <span>{formatFileSize(fileItem.size)}</span>

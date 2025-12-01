@@ -6,11 +6,14 @@ const xlsx = require('xlsx');
 const { pool } = require('../config/database');
 const { getPineconeIndex } = require('../config/pinecone');
 const { v4: uuidv4 } = require('uuid');
+const EventEmitter = require('events');
 
-class DocumentProcessor {
+class DocumentProcessor extends EventEmitter {
   constructor() {
+    super();
     this.supportedTypes = ['.pdf', '.docx', '.xlsx', '.txt'];
     this.embeddingService = null;
+    this.processingProgress = new Map(); // Track progress for each document
   }
 
   async getEmbeddingService() {
@@ -32,60 +35,103 @@ class DocumentProcessor {
   }
 
   async processDocument(filePath, originalName, fileType) {
+    const processingId = uuidv4();
+    
     try {
-      console.log(`Processing document: ${originalName}`);
+      console.log(`🚀 Processing document: ${originalName}`);
+      this.emit('progress', { processingId, stage: 'starting', progress: 0, message: 'Starting document processing...' });
       
-      // Extract text content based on file type
+      // Extract text content based on file type (10% progress)
+      this.emit('progress', { processingId, stage: 'extracting', progress: 10, message: 'Extracting text content...' });
       const content = await this.extractContent(filePath, fileType);
       
-      // Segment content into chapters/sections
+      // Segment content into chapters/sections (30% progress)
+      this.emit('progress', { processingId, stage: 'segmenting', progress: 30, message: 'Analyzing document structure...' });
       const sections = await this.segmentContent(content, fileType);
       
-      // Save document metadata to database
+      // Save document metadata to database (50% progress)
+      this.emit('progress', { processingId, stage: 'saving', progress: 50, message: 'Saving document metadata...' });
       const documentId = await this.saveDocumentMetadata(originalName, fileType, filePath, content, sections);
       
-      // Process and store sections with embeddings
-      await this.processSections(documentId, sections);
+      // Process and store sections with embeddings (50-90% progress)
+      this.emit('progress', { processingId, stage: 'embeddings', progress: 60, message: 'Generating AI embeddings...' });
+      await this.processSections(documentId, sections, processingId);
       
-      // Mark document as processed
+      // Mark document as processed (100% progress)
+      this.emit('progress', { processingId, stage: 'completing', progress: 95, message: 'Finalizing document...' });
       await this.markDocumentProcessed(documentId);
       
-      console.log(`Document processed successfully: ${originalName}`);
-      return documentId;
+      this.emit('progress', { processingId, stage: 'completed', progress: 100, message: 'Document processing completed!' });
+      console.log(`✅ Document processed successfully: ${originalName}`);
+      return { documentId, processingId };
       
     } catch (error) {
-      console.error('Error processing document:', error);
+      console.error('❌ Error processing document:', error);
+      this.emit('progress', { processingId, stage: 'error', progress: 0, message: `Error: ${error.message}` });
       throw error;
     }
   }
 
   async extractContent(filePath, fileType) {
-    const buffer = await fs.readFile(filePath);
+    console.log(`📄 Extracting content from ${fileType} file: ${path.basename(filePath)}`);
     
-    switch (fileType.toLowerCase()) {
-      case '.pdf':
-        const pdfData = await pdfParse(buffer);
-        return pdfData.text;
-        
-      case '.docx':
-        const docxResult = await mammoth.extractRawText({ buffer });
-        return docxResult.value;
-        
-      case '.xlsx':
-        const workbook = xlsx.read(buffer, { type: 'buffer' });
-        let content = '';
-        workbook.SheetNames.forEach(sheetName => {
-          const sheet = workbook.Sheets[sheetName];
-          const sheetData = xlsx.utils.sheet_to_txt(sheet);
-          content += `Sheet: ${sheetName}\n${sheetData}\n\n`;
-        });
-        return content;
-        
-      case '.txt':
-        return buffer.toString('utf-8');
-        
-      default:
-        throw new Error(`Unsupported file type: ${fileType}`);
+    // Check file size for memory management
+    const stats = await fs.stat(filePath);
+    const fileSizeMB = stats.size / (1024 * 1024);
+    console.log(`📊 File size: ${fileSizeMB.toFixed(2)} MB`);
+    
+    if (fileSizeMB > 100) {
+      throw new Error(`File too large: ${fileSizeMB.toFixed(2)} MB. Maximum supported size is 100 MB.`);
+    }
+    
+    try {
+      const buffer = await fs.readFile(filePath);
+      
+      switch (fileType.toLowerCase()) {
+        case '.pdf':
+          console.log('🔍 Parsing PDF document...');
+          const pdfData = await pdfParse(buffer, {
+            // Optimize for large PDFs
+            max: 0, // No page limit
+            version: 'v1.10.100'
+          });
+          return pdfData.text;
+          
+        case '.docx':
+          console.log('📝 Extracting DOCX content...');
+          const docxResult = await mammoth.extractRawText({ 
+            buffer,
+            // Optimize for large documents
+            convertImage: mammoth.images.ignoreAll
+          });
+          return docxResult.value;
+          
+        case '.xlsx':
+          console.log('📊 Processing Excel spreadsheet...');
+          const workbook = xlsx.read(buffer, { 
+            type: 'buffer',
+            // Optimize for large spreadsheets
+            cellText: false,
+            cellDates: true
+          });
+          let content = '';
+          workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const sheetData = xlsx.utils.sheet_to_txt(sheet);
+            content += `Sheet: ${sheetName}\n${sheetData}\n\n`;
+          });
+          return content;
+          
+        case '.txt':
+          console.log('📄 Reading text file...');
+          return buffer.toString('utf-8');
+          
+        default:
+          throw new Error(`Unsupported file type: ${fileType}`);
+      }
+    } catch (error) {
+      console.error(`❌ Error extracting content from ${fileType} file:`, error);
+      throw new Error(`Failed to extract content: ${error.message}`);
     }
   }
 
@@ -168,8 +214,8 @@ class DocumentProcessor {
     }
   }
 
-  async processSections(documentId, sections) {
-    console.log(`Processing ${sections.length} sections for document ${documentId}`);
+  async processSections(documentId, sections, processingId = null) {
+    console.log(`📚 Processing ${sections.length} sections for document ${documentId}`);
     
     try {
       const embeddingService = await this.getEmbeddingService();
@@ -177,7 +223,20 @@ class DocumentProcessor {
       const client = await pool.connect();
       const index = getPineconeIndex();
       
-      for (const section of sections) {
+      for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
+        const section = sections[sectionIndex];
+        
+        // Update progress for each section (60-90% range)
+        const sectionProgress = 60 + Math.round((sectionIndex / sections.length) * 30);
+        if (processingId) {
+          this.emit('progress', { 
+            processingId, 
+            stage: 'embeddings', 
+            progress: sectionProgress, 
+            message: `Processing section ${sectionIndex + 1}/${sections.length}: ${section.title}` 
+          });
+        }
+        
         // Chunk the section content for better embeddings
         const chunks = embeddingService.chunkText(section.content);
         const vectorIds = [];
