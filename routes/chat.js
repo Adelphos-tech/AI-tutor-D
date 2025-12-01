@@ -141,17 +141,8 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // TEMPORARY: Simple response without database/LLM to test basic functionality
-    console.log('🧪 Using temporary simple response for testing');
-    const simpleResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm currently in testing mode, but I'm ready to help you with your studies!`;
-    
-    return res.json({
-      success: true,
-      userMessage: message,
-      aiResponse: simpleResponse,
-      relevantChunks: 0,
-      testMode: true
-    });
+    // Try full functionality with comprehensive error handling
+    console.log('🚀 Attempting full AI tutor functionality...');
     
     console.log('🔗 Connecting to database...');
     const client = await pool.connect();
@@ -294,10 +285,19 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
       relevantChunks: similarContent.length
     });
   } catch (error) {
-    console.error('Error processing chat message:', error);
-    res.status(500).json({ 
-      error: 'Failed to process message',
-      message: error.message 
+    console.error('❌ Error in full functionality, using fallback response:', error);
+    
+    // Fallback to simple response if full functionality fails
+    const fallbackResponse = `Hello! I heard you say: "${message}". I'm Dr. Sarah Chen, your AI academic tutor. I'm experiencing some technical difficulties with my advanced features, but I'm still here to help you with your studies! Could you try asking your question again?`;
+    
+    console.log('🔄 Using fallback response due to error');
+    res.json({
+      success: true,
+      userMessage: message,
+      aiResponse: fallbackResponse,
+      relevantChunks: 0,
+      fallbackMode: true,
+      error: error.message
     });
   }
 });
