@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   AlertCircle, 
   X,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from 'lucide-react';
 
 const DocumentUpload = () => {
