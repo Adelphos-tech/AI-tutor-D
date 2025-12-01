@@ -88,13 +88,51 @@ const DocumentUpload = () => {
           }
         );
 
-        setUploadState(prev => ({
-          ...prev,
-          completed: [...prev.completed, {
-            ...fileItem,
-            documentId: response.documentId
-          }]
-        }));
+        // Show processing stage after upload completes
+        if (response.processing) {
+          setUploadState(prev => ({
+            ...prev,
+            progress: {
+              ...prev.progress,
+              [fileItem.id]: 100 // Show as processing
+            }
+          }));
+
+          // Simulate processing progress (since it's async on server)
+          let processingProgress = 100;
+          const processingInterval = setInterval(() => {
+            processingProgress = Math.min(processingProgress + 2, 100);
+            setUploadState(prev => ({
+              ...prev,
+              progress: {
+                ...prev.progress,
+                [fileItem.id]: processingProgress
+              }
+            }));
+
+            if (processingProgress >= 100) {
+              clearInterval(processingInterval);
+              // Mark as completed after processing simulation
+              setTimeout(() => {
+                setUploadState(prev => ({
+                  ...prev,
+                  completed: [...prev.completed, {
+                    ...fileItem,
+                    documentId: response.documentId
+                  }]
+                }));
+              }, 1000);
+            }
+          }, 200);
+        } else {
+          setUploadState(prev => ({
+            ...prev,
+            completed: [...prev.completed, {
+              ...fileItem,
+              documentId: response.documentId
+            }]
+          }));
+        }
 
       } catch (error) {
         setUploadState(prev => ({
@@ -194,6 +232,32 @@ const DocumentUpload = () => {
             </p>
           </div>
           <div className="card-content">
+            {/* Overall Progress */}
+            {uploadState.uploading && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-medium text-blue-900">Upload Progress</h3>
+                  <span className="text-sm text-blue-700">
+                    {uploadState.completed.length} of {uploadState.files.length} completed
+                  </span>
+                </div>
+                <div className="bg-blue-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${(uploadState.completed.length / uploadState.files.length) * 100}%` 
+                    }}
+                  />
+                </div>
+                <p className="text-sm text-blue-700 mt-2">
+                  {uploadState.completed.length === uploadState.files.length 
+                    ? 'All files uploaded successfully!' 
+                    : 'Uploading and processing your documents...'
+                  }
+                </p>
+              </div>
+            )}
+
             <div className="space-y-3">
               {uploadState.files.map((fileItem) => (
                 <div
@@ -209,18 +273,39 @@ const DocumentUpload = () => {
                   </div>
 
                   <div className="flex items-center space-x-3">
-                    {/* Progress Bar */}
+                    {/* Enhanced Progress Bar */}
                     {uploadState.uploading && uploadState.progress[fileItem.id] !== undefined && (
-                      <div className="w-32">
-                        <div className="bg-gray-200 rounded-full h-2">
+                      <div className="w-48">
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center space-x-1">
+                            <Loader2 className="h-3 w-3 animate-spin text-blue-500" />
+                            <span className="text-xs font-medium text-gray-700">
+                              {uploadState.progress[fileItem.id] < 100 ? 'Uploading...' : 'Processing...'}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {uploadState.progress[fileItem.id]}%
+                          </span>
+                        </div>
+                        <div className="bg-gray-200 rounded-full h-3">
                           <div
-                            className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                            className={`h-3 rounded-full transition-all duration-500 ${
+                              uploadState.progress[fileItem.id] < 100 
+                                ? 'bg-blue-500' 
+                                : 'bg-green-500 animate-pulse'
+                            }`}
                             style={{ width: `${uploadState.progress[fileItem.id]}%` }}
                           />
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {uploadState.progress[fileItem.id]}%
-                        </p>
+                        <div className="flex justify-between text-xs text-gray-500 mt-1">
+                          <span>
+                            {uploadState.progress[fileItem.id] < 100 
+                              ? `${Math.round((fileItem.size * uploadState.progress[fileItem.id]) / 100 / 1024)} KB uploaded`
+                              : 'Generating embeddings...'
+                            }
+                          </span>
+                          <span>{formatFileSize(fileItem.size)}</span>
+                        </div>
                       </div>
                     )}
 

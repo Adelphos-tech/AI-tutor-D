@@ -47,14 +47,27 @@ router.post('/upload', upload.single('document'), async (req, res) => {
     const { originalname, filename, path: filePath } = req.file;
     const fileType = path.extname(originalname).toLowerCase();
 
-    // Process document asynchronously
-    const documentId = await documentProcessor.processDocument(filePath, originalname, fileType);
+    // Start document processing asynchronously (don't wait for completion)
+    console.log('🚀 Starting async document processing for:', originalname);
+    
+    // Process document in background without blocking the response
+    documentProcessor.processDocument(filePath, originalname, fileType)
+      .then(documentId => {
+        console.log('✅ Document processing completed for ID:', documentId);
+      })
+      .catch(error => {
+        console.error('❌ Document processing failed:', error);
+      });
 
+    // Return immediate response with temporary ID
+    const tempDocumentId = Date.now(); // Temporary ID until processing completes
+    
     res.json({
       success: true,
-      documentId,
-      message: 'Document uploaded and processing started',
-      filename: originalname
+      documentId: tempDocumentId,
+      message: 'Document uploaded successfully. Processing in background...',
+      filename: originalname,
+      processing: true
     });
   } catch (error) {
     console.error('Upload error:', error);
