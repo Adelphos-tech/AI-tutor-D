@@ -140,11 +140,14 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     
     const client = await pool.connect();
     
-    // Get session and section info
+    // Get session and section info (with optional document section)
     const sessionResult = await client.query(`
-      SELECT cs.*, ds.section_title, ds.content, ds.document_id
+      SELECT cs.*, 
+             COALESCE(ds.section_title, 'General Discussion') as section_title, 
+             COALESCE(ds.content, 'No specific document context available. I can help with general academic questions.') as content,
+             cs.document_id
       FROM chat_sessions cs
-      JOIN document_sections ds ON cs.section_id = ds.id
+      LEFT JOIN document_sections ds ON cs.section_id = ds.id
       WHERE cs.id = $1
     `, [sessionId]);
     
@@ -154,6 +157,7 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     }
     
     const session = sessionResult.rows[0];
+    console.log('Session loaded:', { id: session.id, section_title: session.section_title });
     
     // Get conversation history
     const historyResult = await client.query(`
@@ -175,27 +179,34 @@ router.post('/sessions/:sessionId/messages', async (req, res) => {
     
     // Get relevant context using RAG
     let context = session.content;
-    try {
-      console.log('Searching for similar content...');
-      const similarContent = await documentProcessor.searchSimilarContent(
-        message, 
-        session.document_id, 
-        session.section_id,
-        3
-      );
-      
-      // Combine section content with similar chunks
-      if (similarContent.length > 0) {
-        const additionalContext = similarContent
-          .map(chunk => chunk.content)
-          .join('\n\n');
-        context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
+    let similarContent = [];
+    
+    // Only search for similar content if we have a valid document
+    if (session.document_id && session.section_id) {
+      try {
+        console.log('Searching for similar content...');
+        similarContent = await documentProcessor.searchSimilarContent(
+          message, 
+          session.document_id, 
+          session.section_id,
+          3
+        );
+        
+        // Combine section content with similar chunks
+        if (similarContent.length > 0) {
+          const additionalContext = similarContent
+            .map(chunk => chunk.content)
+            .join('\n\n');
+          context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
+        }
+        console.log('Similar content search completed');
+      } catch (error) {
+        console.error('Error in similarity search:', error);
+        // Continue with basic context if RAG fails
+        console.log('Continuing with basic context only');
       }
-      console.log('Similar content search completed');
-    } catch (error) {
-      console.error('Error in similarity search:', error);
-      // Continue with basic context if RAG fails
-      console.log('Continuing with basic context only');
+    } else {
+      console.log('No document context available, using general context');
     }
     
     // Generate AI response
