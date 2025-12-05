@@ -268,7 +268,8 @@ export class VoiceWebSocket {
 
   connect() {
     return new Promise((resolve, reject) => {
-      const wsUrl = `ws://localhost:5001/api/voice/realtime`;
+      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+      const wsUrl = baseUrl.replace('http://', 'ws://').replace('https://', 'wss://').replace('/api', '') + '/api/voice/realtime';
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
