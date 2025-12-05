@@ -108,7 +108,7 @@ router.post('/upload', (req, res) => {
       .then(result => {
         console.log('✅ Document processing completed:', result);
       })
-      .catch(error => {
+      .catch(async error => {
         console.error('❌ Document processing failed:', error);
         console.error('Error details:', {
           message: error.message,
@@ -117,6 +117,82 @@ router.post('/upload', (req, res) => {
           originalname,
           fileType
         });
+        
+        // Mark document as processed even if processing failed
+        // This prevents it from being stuck in "processing" state forever
+        try {
+          const client = await pool.connect();
+          try {
+            // Find the document by filename and mark as processed
+            const docResult = await client.query(`
+              UPDATE documents 
+              SET processed = TRUE 
+              WHERE filename = $1 AND processed = FALSE
+              RETURNING id, original_name
+            `, [path.basename(filePath)]);
+            
+            if (docResult.rows.length > 0) {
+              const doc = docResult.rows[0];
+              console.log('📝 Marked failed document as processed to prevent stuck state');
+              
+              // Create basic sections so the document is still usable
+              console.log('🔧 Creating fallback sections for failed document...');
+              
+              const isThesis = doc.original_name.toLowerCase().includes('thesis');
+              const isPDF = doc.original_name.toLowerCase().includes('.pdf');
+              
+              let sections;
+              if (isThesis) {
+                sections = [
+                  {
+                    title: 'Thesis Document',
+                    content: `This thesis document (${doc.original_name}) was uploaded but could not be fully processed due to file format issues. However, you can still discuss general thesis topics, research methodologies, and academic concepts with the AI tutor.`,
+                    number: 1
+                  },
+                  {
+                    title: 'Research Discussion',
+                    content: 'While the specific content could not be extracted, you can ask questions about research methods, data analysis, literature reviews, and thesis writing techniques. The AI can provide general academic guidance.',
+                    number: 2
+                  }
+                ];
+              } else {
+                sections = [
+                  {
+                    title: 'Document Content',
+                    content: `This document (${doc.original_name}) was uploaded but could not be processed due to file format issues. You can still use this space to discuss topics related to the document or ask general questions.`,
+                    number: 1
+                  },
+                  {
+                    title: 'General Discussion',
+                    content: 'Use this section to have conversations about topics that might be related to your document, or ask the AI tutor for help with understanding concepts.',
+                    number: 2
+                  }
+                ];
+              }
+              
+              // Insert fallback sections
+              for (const section of sections) {
+                await client.query(`
+                  INSERT INTO document_sections (document_id, section_title, section_number, content, word_count, vector_ids)
+                  VALUES ($1, $2, $3, $4, $5, $6)
+                `, [
+                  doc.id,
+                  section.title,
+                  section.number,
+                  section.content,
+                  section.content.split(/\s+/).length,
+                  []
+                ]);
+              }
+              
+              console.log(`✅ Created ${sections.length} fallback sections for document ${doc.id}`);
+            }
+          } finally {
+            client.release();
+          }
+        } catch (dbError) {
+          console.error('❌ Failed to mark document as processed:', dbError);
+        }
       });
     
     res.json({

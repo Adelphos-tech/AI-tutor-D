@@ -217,10 +217,19 @@ class DocumentProcessor extends EventEmitter {
   async processSections(documentId, sections, processingId = null) {
     console.log(`📚 Processing ${sections.length} sections for document ${documentId}`);
     
+    let client;
     try {
       const embeddingService = await this.getEmbeddingService();
       
-      const client = await pool.connect();
+      client = await pool.connect();
+      
+      // Initialize Pinecone if not already initialized
+      const { initializePinecone, getPineconeIndex } = require('../config/pinecone');
+      try {
+        await initializePinecone();
+      } catch (error) {
+        console.log('Pinecone already initialized or initialization failed:', error.message);
+      }
       const index = getPineconeIndex();
       
       for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
@@ -278,7 +287,9 @@ class DocumentProcessor extends EventEmitter {
         ]);
       }
     } finally {
-      client.release();
+      if (client) {
+        client.release();
+      }
     }
   }
 
