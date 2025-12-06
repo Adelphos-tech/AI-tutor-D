@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, Info, CheckCircle } from 'lucide-react';
+import { X, AlertCircle, Info } from 'lucide-react';
 
 const VisualLogger = () => {
   const [logs, setLogs] = useState([]);

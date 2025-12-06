@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Smartphone, Monitor, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Smartphone, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
 
 const MobileDebug = () => {
   const navigate = useNavigate();
