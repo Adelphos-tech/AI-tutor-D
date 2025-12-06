@@ -110,22 +110,23 @@ export const chatAPI = {
   },
 
   // Send message
-  sendMessage: async (sessionId, message) => {
+  sendMessage: async (sessionId, message, language = 'en') => {
     const response = await api.post(`/chat/sessions/${sessionId}/messages`, {
       message,
+      language,
     });
     return response.data;
   },
 
   // Stream message
-  streamMessage: async (sessionId, message, onChunk, onComplete, onError) => {
+  streamMessage: async (sessionId, message, language, onChunk, onComplete, onError) => {
     try {
       const response = await fetch(`${API_BASE_URL}/chat/sessions/${sessionId}/stream`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ message, language }),
       });
 
       if (!response.ok) {

@@ -10,13 +10,22 @@ import {
   User, 
   BookOpen,
   Loader2,
-  Sparkles
+  Sparkles,
+  Globe
 } from 'lucide-react';
 
 const VoiceSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
+  // Language support
+  const supportedLanguages = [
+    { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US' },
+    { code: 'ta', name: 'Tamil', flag: '🇮🇳', voice: 'ta-IN' },
+    { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN' }
+  ];
+
   // State management
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -25,6 +34,8 @@ const VoiceSession = () => {
   const [aiResponse, setAiResponse] = useState('');
   const [conversationHistory, setConversationHistory] = useState([]);
   const [voiceStatus, setVoiceStatus] = useState('disconnected');
+  const [selectedLanguage, setSelectedLanguage] = useState(supportedLanguages[0]); // Default to English
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
   const voiceClientRef = useRef(null);
 
@@ -64,7 +75,10 @@ const VoiceSession = () => {
       // Use Deepgram API key
       const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
       
-      const client = new NaturalVoiceClient(sessionId, deepgramApiKey);
+      const client = new NaturalVoiceClient(sessionId, deepgramApiKey, {
+        language: selectedLanguage.voice,
+        languageCode: selectedLanguage.code
+      });
       voiceClientRef.current = client;
 
       // Set up event handlers
@@ -183,6 +197,41 @@ const VoiceSession = () => {
                 </h1>
                 <p className="text-sm text-gray-600">Natural AI Conversation</p>
               </div>
+            </div>
+            
+            {/* Language Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Globe className="h-4 w-4" />
+                <span className="text-sm font-medium">{selectedLanguage.flag} {selectedLanguage.name}</span>
+              </button>
+              
+              {showLanguageSelector && (
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px]">
+                  {supportedLanguages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => {
+                        setSelectedLanguage(language);
+                        setShowLanguageSelector(false);
+                        // Restart voice client if it's connected to apply new language
+                        if (voiceStatus === 'connected' || voiceStatus === 'listening') {
+                          stopVoiceConversation();
+                        }
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
+                        selectedLanguage.code === language.code ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
+                    >
+                      <span className="text-lg">{language.flag}</span>
+                      <span className="text-sm font-medium">{language.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

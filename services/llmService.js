@@ -8,7 +8,16 @@ class LLMService {
     this.model = 'llama-3.1-8b-instant'; // Fastest Groq model for low latency
   }
 
-  generateTutorPrompt(context, sectionTitle, conversationHistory = []) {
+  generateTutorPrompt(context, sectionTitle, conversationHistory = [], language = 'en') {
+    // Language-specific instructions
+    const languageInstructions = {
+      'en': 'Respond in clear, natural English.',
+      'ta': 'Respond in Tamil (தமிழ்). Use clear, educational Tamil language appropriate for academic discussions.',
+      'ms': 'Respond in Malay (Bahasa Melayu). Use clear, educational Malay language appropriate for academic discussions.',
+      'zh': 'Respond in Simplified Chinese (简体中文). Use clear, educational Chinese language appropriate for academic discussions.'
+    };
+
+    const languageInstruction = languageInstructions[language] || languageInstructions['en'];
     // Truncate context to manage token limits (approximately 3000 characters = ~750 tokens)
     const truncatedContext = context.length > 3000 ? context.substring(0, 3000) + "..." : context;
     
@@ -79,14 +88,17 @@ FORMATTING GUIDELINES:
 - Keep responses conversational and easy to read
 - Use quotation marks for emphasis when needed
 
+LANGUAGE INSTRUCTION:
+${languageInstruction}
+
 IMPORTANT: Never mention connection issues, technical problems, or "lost connections" - the system is working properly. Always respond naturally to the user's question with warmth and understanding.`;
 
     return systemPrompt;
   }
 
-  async generateResponse(userMessage, context, sectionTitle, conversationHistory = []) {
+  async generateResponse(userMessage, context, sectionTitle, conversationHistory = [], language = 'en') {
     try {
-      const systemPrompt = this.generateTutorPrompt(context, sectionTitle, conversationHistory);
+      const systemPrompt = this.generateTutorPrompt(context, sectionTitle, conversationHistory, language);
       
       // Prepare conversation messages
       const messages = [
@@ -117,9 +129,9 @@ IMPORTANT: Never mention connection issues, technical problems, or "lost connect
     }
   }
 
-  async generateStreamResponse(userMessage, context, sectionTitle, conversationHistory = []) {
+  async generateStreamResponse(userMessage, context, sectionTitle, conversationHistory = [], language = 'en') {
     try {
-      const systemPrompt = this.generateTutorPrompt(context, sectionTitle, conversationHistory);
+      const systemPrompt = this.generateTutorPrompt(context, sectionTitle, conversationHistory, language);
       
       const messages = [
         { role: 'system', content: systemPrompt }

@@ -1,9 +1,11 @@
 import { createClient, LiveTranscriptionEvents } from '@deepgram/sdk';
 
 class NaturalVoiceClient {
-  constructor(sessionId, deepgramApiKey) {
+  constructor(sessionId, deepgramApiKey, options = {}) {
     this.sessionId = sessionId;
     this.deepgramApiKey = deepgramApiKey;
+    this.language = options.language || 'en-US';
+    this.languageCode = options.languageCode || 'en';
     
     // Initialize Deepgram client
     this.deepgram = createClient(deepgramApiKey);
@@ -53,7 +55,7 @@ class NaturalVoiceClient {
       // Create live transcription connection optimized for low latency
       const deepgramConfig = {
         model: 'nova-2',
-        language: 'en-US',
+        language: this.language,
         smart_format: false, // Disable for speed
         interim_results: true,
         vad_events: true,
@@ -201,7 +203,8 @@ class NaturalVoiceClient {
         },
         body: JSON.stringify({
           message: message,
-          conversationHistory: this.conversationHistory.slice(-6) // Last 6 messages for context
+          conversationHistory: this.conversationHistory.slice(-6), // Last 6 messages for context
+          language: this.languageCode
         }),
       });
 
@@ -247,10 +250,21 @@ class NaturalVoiceClient {
       // Clean text for speech
       const cleanText = this.cleanTextForSpeech(text);
 
+      // Select voice based on language
+      const voiceMap = {
+        'en': 'aura-asteria-en',
+        'ta': 'aura-asteria-en', // Fallback to English for now
+        'ms': 'aura-asteria-en', // Fallback to English for now  
+        'zh': 'aura-asteria-en'  // Fallback to English for now
+      };
+      
+      const selectedVoice = voiceMap[this.languageCode] || 'aura-asteria-en';
+
       // Call TTS API
       const formData = new FormData();
       formData.append('text', cleanText);
-      formData.append('voice', 'aura-asteria-en');
+      formData.append('voice', selectedVoice);
+      formData.append('language', this.languageCode);
 
       const response = await fetch('/api/voice/synthesize', {
         method: 'POST',

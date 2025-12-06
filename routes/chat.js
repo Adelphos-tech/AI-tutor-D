@@ -6,7 +6,7 @@ const documentProcessor = require('../services/documentProcessor');
 const router = express.Router();
 
 // Helper function for regular message processing
-async function handleRegularMessage(sessionId, message) {
+async function handleRegularMessage(sessionId, message, language = 'en') {
   let client = null;
   
   try {
@@ -63,7 +63,8 @@ async function handleRegularMessage(sessionId, message) {
       message,
       context,
       session.section_title,
-      conversationHistory
+      conversationHistory,
+      language
     );
     
     // Save messages to database
@@ -233,14 +234,14 @@ router.get('/sessions/:sessionId', async (req, res) => {
 router.post('/sessions/:sessionId/messages', async (req, res) => {
   try {
     const sessionId = parseInt(req.params.sessionId);
-    const { message } = req.body;
+    const { message, language } = req.body;
     
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
     }
     
     // Use the helper function
-    const result = await handleRegularMessage(sessionId, message);
+    const result = await handleRegularMessage(sessionId, message, language);
     res.json(result);
   } catch (error) {
     console.error('❌ Error in message endpoint:', error);
@@ -259,10 +260,10 @@ router.post('/sessions/:sessionId/stream', async (req, res) => {
     console.log('🔄 Production mode: Using regular chat instead of streaming');
     try {
       const sessionId = parseInt(req.params.sessionId);
-      const { message } = req.body;
+      const { message, language } = req.body;
       
       // Call regular message endpoint internally
-      const regularResponse = await handleRegularMessage(sessionId, message);
+      const regularResponse = await handleRegularMessage(sessionId, message, language);
       
       // Convert to streaming format
       res.writeHead(200, {
@@ -298,7 +299,7 @@ router.post('/sessions/:sessionId/stream', async (req, res) => {
   // Development mode: Use actual streaming
   try {
     const sessionId = parseInt(req.params.sessionId);
-    const { message } = req.body;
+    const { message, language } = req.body;
     
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message is required' });
@@ -370,7 +371,8 @@ router.post('/sessions/:sessionId/stream', async (req, res) => {
         message,
         context,
         session.section_title,
-        conversationHistory
+        conversationHistory,
+        language
       );
       
       let fullResponse = '';

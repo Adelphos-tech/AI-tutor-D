@@ -11,12 +11,22 @@ import {
   BookOpen,
   MessageCircle,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Globe
 } from 'lucide-react';
 
 const ChatSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  
+  // Language support
+  const supportedLanguages = [
+    { code: 'en', name: 'English', flag: '🇺🇸' },
+    { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
+    { code: 'ms', name: 'Malay', flag: '🇲🇾' },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳' }
+  ];
+  
   const [session, setSession] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -24,6 +34,8 @@ const ChatSession = () => {
   const [sending, setSending] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState(supportedLanguages[0]);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -92,6 +104,7 @@ const ChatSession = () => {
       await chatAPI.streamMessage(
         sessionId,
         userMessage,
+        selectedLanguage.code,
         (chunk) => {
           fullResponse += chunk;
           setStreamingMessage(fullResponse);
@@ -219,7 +232,38 @@ const ChatSession = () => {
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-4">
+            {/* Language Selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                <Globe className="h-4 w-4" />
+                <span className="text-sm font-medium">{selectedLanguage.flag} {selectedLanguage.name}</span>
+              </button>
+              
+              {showLanguageSelector && (
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px]">
+                  {supportedLanguages.map((language) => (
+                    <button
+                      key={language.code}
+                      onClick={() => {
+                        setSelectedLanguage(language);
+                        setShowLanguageSelector(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
+                        selectedLanguage.code === language.code ? 'bg-blue-50 text-blue-600' : ''
+                      }`}
+                    >
+                      <span className="text-lg">{language.flag}</span>
+                      <span className="text-sm font-medium">{language.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             <div className="flex items-center text-green-600">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               <span className="text-sm font-medium">Active</span>
