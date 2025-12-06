@@ -395,7 +395,19 @@ router.post('/sessions/:sessionId/stream', async (req, res) => {
     
   } catch (error) {
     console.error('Error streaming chat response:', error);
-    res.write(`data: ${JSON.stringify({ error: 'Failed to process message' })}\n\n`);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      sessionId,
+      userMessage: message
+    });
+    
+    // Send detailed error information
+    res.write(`data: ${JSON.stringify({ 
+      error: 'Failed to process message',
+      details: error.message,
+      sessionId: sessionId
+    })}\n\n`);
     res.end();
   }
 });

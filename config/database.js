@@ -20,8 +20,10 @@ async function initializeDatabase() {
         original_name VARCHAR(255) NOT NULL,
         file_type VARCHAR(50) NOT NULL,
         file_size INTEGER NOT NULL,
+        file_path VARCHAR(500) NOT NULL,
         upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         processed BOOLEAN DEFAULT FALSE,
+        extraction_method VARCHAR(50) DEFAULT 'primary',
         content_preview TEXT,
         total_chunks INTEGER DEFAULT 0,
         metadata JSONB DEFAULT '{}'

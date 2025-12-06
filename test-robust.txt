@@ -1,0 +1,1 @@
+This is a comprehensive test document for the new robust upload system. It contains multiple paragraphs with meaningful content that should be properly extracted and processed by the enhanced document processing pipeline. The system should now handle content extraction more reliably and create proper sections for RAG functionality.
