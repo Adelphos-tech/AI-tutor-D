@@ -1,8 +1,6 @@
-import React, { useState, useCallback, useEffect, Suspense } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDropzone } from 'react-dropzone';
 import { documentAPI } from '../services/api';
-import LoadingFallback from '../components/LoadingFallback';
 import { 
   Upload, 
   FileText, 
@@ -57,17 +55,11 @@ const DocumentUploadContent = () => {
     }));
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-      'text/plain': ['.txt']
-    },
-    maxSize: 50 * 1024 * 1024, // 50MB
-    multiple: true
-  });
+  // Simple file input handler for better mobile compatibility
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files);
+    onDrop(files);
+  };
 
   const removeFile = (fileId) => {
     setUploadState(prev => ({
@@ -272,28 +264,29 @@ const DocumentUploadContent = () => {
       {/* Upload Area */}
       <div className="card">
         <div className="card-content">
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive
-                ? 'border-primary-500 bg-primary-50'
-                : 'border-gray-300 hover:border-gray-400'
-            }`}
-          >
-            <input {...getInputProps()} />
+          <div className="border-2 border-dashed rounded-lg p-8 text-center">
             <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            {isDragActive ? (
-              <p className="text-lg text-primary-600">Drop the files here...</p>
-            ) : (
-              <div>
-                <p className="text-lg text-gray-600 mb-2">
-                  Drag & drop files here, or click to select files
-                </p>
-                <p className="text-sm text-gray-500">
-                  Supports PDF, DOCX, XLSX, and TXT files (max 50MB each)
-                </p>
-              </div>
-            )}
+            <div>
+              <p className="text-lg text-gray-600 mb-2">
+                Select files to upload
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Supports PDF, DOCX, XLSX, and TXT files (max 50MB each)
+              </p>
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.docx,.xlsx,.txt,.doc,.xls"
+                onChange={handleFileSelect}
+                className="mobile-input block w-full text-sm text-gray-500
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-full file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-blue-50 file:text-blue-700
+                  hover:file:bg-blue-100
+                  cursor-pointer"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -571,14 +564,10 @@ const DocumentUploadContent = () => {
   );
 };
 
-// Wrapper component with error boundary
+// Simple wrapper component for better mobile performance
 const DocumentUpload = () => {
   console.log('DocumentUpload wrapper rendering...');
-  return (
-    <Suspense fallback={<LoadingFallback message="Loading upload page..." />}>
-      <DocumentUploadContent />
-    </Suspense>
-  );
+  return <DocumentUploadContent />;
 };
 
 export default DocumentUpload;

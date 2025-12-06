@@ -46,13 +46,26 @@ if (!rootElement) {
     const root = ReactDOM.createRoot(rootElement);
     console.log('✅ React root created, rendering app...');
     
-    root.render(
-      <React.StrictMode>
+    // Remove StrictMode for mobile compatibility
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      console.log('📱 Mobile detected - rendering without StrictMode for compatibility');
+      root.render(
         <ErrorBoundary>
           <App />
         </ErrorBoundary>
-      </React.StrictMode>
-    );
+      );
+    } else {
+      console.log('🖥️ Desktop detected - rendering with StrictMode');
+      root.render(
+        <React.StrictMode>
+          <ErrorBoundary>
+            <App />
+          </ErrorBoundary>
+        </React.StrictMode>
+      );
+    }
     
     console.log('✅ React app rendered successfully');
   } catch (error) {
