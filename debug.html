@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug AI Tutor App</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; }
+        .error { background-color: #f8d7da; }
+        button { padding: 10px 20px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h1>AI Tutor Debug Page</h1>
+    <p>This page will help debug the white screen issue.</p>
+    
+    <div id="tests"></div>
+    
+    <h2>Manual Tests</h2>
+    <button onclick="testMainApp()">Test Main App</button>
+    <button onclick="testUploadPage()">Test Upload Page</button>
+    <button onclick="testAPI()">Test API</button>
+    <button onclick="openApp()">Open App in New Tab</button>
+    
+    <h2>Console Logs</h2>
+    <div id="logs" style="background: #f8f9fa; padding: 10px; height: 200px; overflow-y: scroll; border: 1px solid #ccc;"></div>
+
+    <script>
+        const PROD_URL = 'https://ai-tutor-d-production.up.railway.app';
+        const testsDiv = document.getElementById('tests');
+        const logsDiv = document.getElementById('logs');
+        
+        function log(message) {
+            console.log(message);
+            const p = document.createElement('p');
+            p.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            logsDiv.appendChild(p);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+        
+        function addTest(name, success, details) {
+            const div = document.createElement('div');
+            div.className = 'test ' + (success ? 'success' : 'error');
+            div.innerHTML = `<strong>${name}:</strong> ${success ? '✅ PASS' : '❌ FAIL'}<br>${details}`;
+            testsDiv.appendChild(div);
+        }
+        
+        async function testMainApp() {
+            log('Testing main app...');
+            try {
+                const response = await fetch(PROD_URL);
+                const text = await response.text();
+                const hasReactRoot = text.includes('id="root"');
+                const hasJS = text.includes('.js');
+                const hasCSS = text.includes('.css');
+                
+                addTest('Main App', response.ok, 
+                    `Status: ${response.status}, Has React Root: ${hasReactRoot}, Has JS: ${hasJS}, Has CSS: ${hasCSS}`);
+                log(`Main app test: ${response.status}, React: ${hasReactRoot}`);
+            } catch (error) {
+                addTest('Main App', false, error.message);
+                log('Main app error: ' + error.message);
+            }
+        }
+        
+        async function testUploadPage() {
+            log('Testing upload page...');
+            try {
+                const response = await fetch(PROD_URL + '/upload');
+                const text = await response.text();
+                const hasReactRoot = text.includes('id="root"');
+                
+                addTest('Upload Page', response.ok, 
+                    `Status: ${response.status}, Has React Root: ${hasReactRoot}`);
+                log(`Upload page test: ${response.status}, React: ${hasReactRoot}`);
+            } catch (error) {
+                addTest('Upload Page', false, error.message);
+                log('Upload page error: ' + error.message);
+            }
+        }
+        
+        async function testAPI() {
+            log('Testing API...');
+            try {
+                const response = await fetch(PROD_URL + '/api/health');
+                const data = await response.json();
+                
+                addTest('API Health', response.ok, 
+                    `Status: ${response.status}, Response: ${JSON.stringify(data)}`);
+                log(`API test: ${response.status}, Data: ${JSON.stringify(data)}`);
+            } catch (error) {
+                addTest('API Health', false, error.message);
+                log('API error: ' + error.message);
+            }
+        }
+        
+        function openApp() {
+            log('Opening app in new tab...');
+            window.open(PROD_URL, '_blank');
+        }
+        
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            log('Debug page loaded, running auto tests...');
+            setTimeout(testMainApp, 1000);
+            setTimeout(testUploadPage, 2000);
+            setTimeout(testAPI, 3000);
+        });
+        
+        // Capture any errors
+        window.addEventListener('error', (e) => {
+            log('JavaScript error: ' + e.error.message);
+        });
+    </script>
+</body>
+</html>
