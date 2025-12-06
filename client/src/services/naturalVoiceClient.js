@@ -4,8 +4,9 @@ class NaturalVoiceClient {
   constructor(sessionId, deepgramApiKey, options = {}) {
     this.sessionId = sessionId;
     this.deepgramApiKey = deepgramApiKey;
-    this.language = options.language || 'en-US';
-    this.languageCode = options.languageCode || 'en';
+    this.language = options.language || 'en-US'; // Deepgram language code
+    this.languageCode = options.languageCode || 'en'; // LLM language code
+    this.voiceLanguage = options.voiceLanguage || 'en-US'; // TTS language code
     
     // Initialize Deepgram client
     this.deepgram = createClient(deepgramApiKey);

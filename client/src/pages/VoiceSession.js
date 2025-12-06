@@ -18,12 +18,12 @@ const VoiceSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
-  // Language support
+  // Language support - Updated with actual Deepgram test results
   const supportedLanguages = [
-    { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US' },
-    { code: 'ta', name: 'Tamil', flag: '🇮🇳', voice: 'ta-IN' },
-    { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN' }
+    { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US', deepgram: 'en-US', sttSupported: true, ttsSupported: true },
+    { code: 'ta', name: 'Tamil', flag: '🇮🇳', voice: 'ta-IN', deepgram: 'en-US', sttSupported: false, ttsSupported: false }, // STT: English fallback, TTS: English voice
+    { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY', deepgram: 'ms', sttSupported: true, ttsSupported: false }, // STT: Native, TTS: English voice
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN', deepgram: 'zh-CN', sttSupported: true, ttsSupported: false } // STT: Native, TTS: English voice
   ];
 
   // State management
@@ -76,8 +76,9 @@ const VoiceSession = () => {
       const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
       
       const client = new NaturalVoiceClient(sessionId, deepgramApiKey, {
-        language: selectedLanguage.voice,
-        languageCode: selectedLanguage.code
+        language: selectedLanguage.deepgram,
+        languageCode: selectedLanguage.code,
+        voiceLanguage: selectedLanguage.voice
       });
       voiceClientRef.current = client;
 
@@ -286,6 +287,18 @@ const VoiceSession = () => {
               <p className="text-gray-600 text-sm">
                 🎤 Speak naturally - I'm listening and will respond automatically
               </p>
+              {(!selectedLanguage.sttSupported || !selectedLanguage.ttsSupported) && (
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-amber-800 text-xs">
+                    {!selectedLanguage.sttSupported && !selectedLanguage.ttsSupported && (
+                      <>⚠️ Speech recognition uses English. Voice responses in English. AI text responses in {selectedLanguage.name}.</>
+                    )}
+                    {selectedLanguage.sttSupported && !selectedLanguage.ttsSupported && (
+                      <>⚠️ Speech recognition in {selectedLanguage.name}. Voice responses in English. AI text responses in {selectedLanguage.name}.</>
+                    )}
+                  </p>
+                </div>
+              )}
             </div>
           )}
           

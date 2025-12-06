@@ -102,14 +102,25 @@ router.post('/synthesize', upload.none(), async (req, res) => {
     console.log('Synthesize request body:', req.body);
     console.log('Synthesize request headers:', req.headers);
     
-    const { text, voice = 'aura-asteria-en' } = req.body;
+    const { text, voice = 'aura-asteria-en', language = 'en' } = req.body;
     
     if (!text || !text.trim()) {
       console.log('Text validation failed:', { text, textType: typeof text });
       return res.status(400).json({ error: 'Text is required' });
     }
 
-    const audioBuffer = await voiceService.synthesizeSpeech(text, { model: voice });
+    // Map language codes to appropriate voice models
+    const voiceModelMap = {
+      'en': 'aura-asteria-en',
+      'ta': 'aura-asteria-en', // Fallback to English
+      'ms': 'aura-asteria-en', // Fallback to English
+      'zh': 'aura-asteria-en'  // Fallback to English for now
+    };
+
+    const selectedModel = voiceModelMap[language] || voice || 'aura-asteria-en';
+    console.log(`Using TTS model: ${selectedModel} for language: ${language}`);
+
+    const audioBuffer = await voiceService.synthesizeSpeech(text, { model: selectedModel });
     
     res.set({
       'Content-Type': 'audio/wav',

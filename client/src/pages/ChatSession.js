@@ -19,12 +19,12 @@ const ChatSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
-  // Language support
+  // Language support - Updated with actual Deepgram test results
   const supportedLanguages = [
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'ta', name: 'Tamil', flag: '🇮🇳' },
-    { code: 'ms', name: 'Malay', flag: '🇲🇾' },
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳' }
+    { code: 'en', name: 'English', flag: '🇺🇸', sttSupported: true, ttsSupported: true },
+    { code: 'ta', name: 'Tamil', flag: '🇮🇳', sttSupported: false, ttsSupported: false },
+    { code: 'ms', name: 'Malay', flag: '🇲🇾', sttSupported: true, ttsSupported: false },
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳', sttSupported: true, ttsSupported: false }
   ];
   
   const [session, setSession] = useState(null);

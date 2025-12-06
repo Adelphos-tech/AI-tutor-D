@@ -51,10 +51,13 @@ class VoiceService extends EventEmitter {
   // Text-to-Speech using Deepgram
   async synthesizeSpeech(text, options = {}) {
     try {
+      // Default to English model if not specified
+      const defaultModel = 'aura-asteria-en';
+      
       const response = await this.deepgram.speak.request(
         { text },
         {
-          model: 'aura-asteria-en',
+          model: defaultModel,
           encoding: 'linear16',
           sample_rate: 24000,
           ...options
