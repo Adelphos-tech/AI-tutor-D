@@ -1,0 +1,12 @@
+[phases.build]
+cmds = [
+    "npm install",
+    "cd client && npm install",
+    "cd client && npm run build"
+]
+
+[phases.start]
+cmd = "node server.js"
+
+[variables]
+NODE_ENV = "production"
