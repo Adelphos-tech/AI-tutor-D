@@ -51,8 +51,17 @@ class VoiceService extends EventEmitter {
   // Text-to-Speech using Deepgram
   async synthesizeSpeech(text, options = {}) {
     try {
+      console.log('🎵 Starting TTS synthesis...', { text: text.substring(0, 50), options });
+      
+      // Check if Deepgram API key is available
+      if (!process.env.DEEPGRAM_API_KEY) {
+        throw new Error('DEEPGRAM_API_KEY not configured');
+      }
+      
       // Default to English model if not specified
-      const defaultModel = 'aura-asteria-en';
+      const defaultModel = options.model || 'aura-asteria-en';
+      
+      console.log('🎵 Making Deepgram TTS request...', { model: defaultModel });
       
       const response = await this.deepgram.speak.request(
         { text },
@@ -64,21 +73,34 @@ class VoiceService extends EventEmitter {
         }
       );
 
+      console.log('🎵 Deepgram TTS response received');
+
       const stream = await response.getStream();
       if (!stream) {
-        throw new Error('No audio stream received');
+        throw new Error('No audio stream received from Deepgram');
       }
 
+      console.log('🎵 Converting stream to buffer...');
+      
       // Convert stream to buffer
       const chunks = [];
       for await (const chunk of stream) {
         chunks.push(chunk);
       }
 
-      return Buffer.concat(chunks);
+      const audioBuffer = Buffer.concat(chunks);
+      console.log('🎵 TTS synthesis successful, buffer size:', audioBuffer.length);
+      
+      return audioBuffer;
     } catch (error) {
-      console.error('Error synthesizing speech:', error);
-      throw new Error('Failed to synthesize speech');
+      console.error('❌ TTS synthesis failed:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        hasApiKey: !!process.env.DEEPGRAM_API_KEY,
+        textLength: text?.length
+      });
+      throw new Error(`TTS synthesis failed: ${error.message}`);
     }
   }
 
