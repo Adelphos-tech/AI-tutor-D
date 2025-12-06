@@ -55,6 +55,16 @@ if (process.env.NODE_ENV === 'production') {
   
   app.use(express.static(buildPath));
   
+  // Special route for upload fallback
+  app.get('/upload-fallback', (req, res) => {
+    const fallbackPath = path.join(__dirname, 'client/public/upload-fallback.html');
+    if (fs.existsSync(fallbackPath)) {
+      res.sendFile(fallbackPath);
+    } else {
+      res.status(404).send('Upload fallback page not found');
+    }
+  });
+
   // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
     console.log('Serving React app for route:', req.path);
@@ -62,17 +72,23 @@ if (process.env.NODE_ENV === 'production') {
       res.sendFile(indexPath);
     } else {
       console.error('❌ index.html not found at:', indexPath);
-      res.status(404).send(`
-        <html>
-          <body>
-            <h1>Build Error</h1>
-            <p>React build files not found at: ${buildPath}</p>
-            <p>Index.html path: ${indexPath}</p>
-            <p>Files in build directory:</p>
-            <pre>${fs.existsSync(buildPath) ? fs.readdirSync(buildPath).join('\n') : 'Build directory does not exist'}</pre>
-          </body>
-        </html>
-      `);
+      // If it's the upload route and React fails, redirect to fallback
+      if (req.path === '/upload') {
+        res.redirect('/upload-fallback');
+      } else {
+        res.status(404).send(`
+          <html>
+            <body>
+              <h1>Build Error</h1>
+              <p>React build files not found at: ${buildPath}</p>
+              <p>Index.html path: ${indexPath}</p>
+              <p>Files in build directory:</p>
+              <pre>${fs.existsSync(buildPath) ? fs.readdirSync(buildPath).join('\n') : 'Build directory does not exist'}</pre>
+              <p><a href="/upload-fallback">Try Upload Fallback Page</a></p>
+            </body>
+          </html>
+        `);
+      }
     }
   });
 } else {

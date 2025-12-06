@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Upload Document - AI Academic Tutor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f9fafb;
+            color: #111827;
+            line-height: 1.6;
+            -webkit-overflow-scrolling: touch;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 15px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #eff6ff;
+        }
+        
+        .back-btn:hover {
+            background: #dbeafe;
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        
+        .upload-area {
+            background: white;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #3b82f6;
+            background: #f8faff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            color: #9ca3af;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        
+        .upload-subtext {
+            color: #6b7280;
+            font-size: 14px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-list {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            background: #f9fafb;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .file-icon {
+            width: 32px;
+            height: 32px;
+            margin-right: 12px;
+            color: #3b82f6;
+        }
+        
+        .file-details h4 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 2px;
+        }
+        
+        .file-details p {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .remove-btn {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 6px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .remove-btn:hover {
+            background: #fecaca;
+        }
+        
+        .upload-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            min-height: 44px;
+        }
+        
+        .upload-btn:hover {
+            background: #2563eb;
+        }
+        
+        .upload-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            transition: width 0.3s ease;
+        }
+        
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .supported-formats {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .format-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        
+        .format-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+        
+        .format-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 12px;
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .header {
+                padding: 16px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .upload-area {
+                padding: 30px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <a href="/" class="back-btn">
+                ← Back to Dashboard
+            </a>
+            <h1>Upload Documents</h1>
+            <p class="subtitle">Upload your educational materials to start learning with AI</p>
+        </div>
+
+        <!-- Status Messages -->
+        <div id="status-messages"></div>
+
+        <!-- Upload Area -->
+        <div class="upload-area" id="upload-area">
+            <div class="upload-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+            </div>
+            <div class="upload-text">Drag & drop files here, or click to select</div>
+            <div class="upload-subtext">Supports PDF, DOCX, XLSX, and TXT files (max 50MB each)</div>
+            <input type="file" id="file-input" class="file-input" multiple accept=".pdf,.docx,.xlsx,.txt,.doc,.xls">
+        </div>
+
+        <!-- File List -->
+        <div id="file-list-container" style="display: none;">
+            <div class="file-list">
+                <h3 style="margin-bottom: 16px; font-size: 18px; font-weight: 600;">Selected Files</h3>
+                <div id="file-list"></div>
+                <button id="upload-btn" class="upload-btn">Upload Files</button>
+                <div id="progress-container" style="display: none;">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-text" style="text-align: center; font-size: 14px; color: #6b7280;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supported Formats -->
+        <div class="supported-formats">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Supported File Types</h3>
+            <div class="format-grid">
+                <div class="format-item">
+                    <div class="format-icon" style="color: #dc2626;">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">PDF Documents</div>
+                        <div style="font-size: 12px; color: #6b7280;">Portable Document Format</div>
+                    </div>
+                </div>
+                <div class="format-item">
+                    <div class="format-icon" style="color: #2563eb;">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">Word Documents</div>
+                        <div style="font-size: 12px; color: #6b7280;">Microsoft Word (.docx)</div>
+                    </div>
+                </div>
+                <div class="format-item">
+                    <div class="format-icon" style="color: #059669;">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">Excel Spreadsheets</div>
+                        <div style="font-size: 12px; color: #6b7280;">Microsoft Excel (.xlsx)</div>
+                    </div>
+                </div>
+                <div class="format-item">
+                    <div class="format-icon" style="color: #6b7280;">
+                        <svg fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">Text Files</div>
+                        <div style="font-size: 12px; color: #6b7280;">Plain text (.txt)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://ai-tutor-d-production.up.railway.app/api';
+        let selectedFiles = [];
+
+        // DOM elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const fileListContainer = document.getElementById('file-list-container');
+        const fileList = document.getElementById('file-list');
+        const uploadBtn = document.getElementById('upload-btn');
+        const progressContainer = document.getElementById('progress-container');
+        const progressFill = document.getElementById('progress-fill');
+        const progressText = document.getElementById('progress-text');
+        const statusMessages = document.getElementById('status-messages');
+
+        // File upload handling
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        uploadBtn.addEventListener('click', uploadFiles);
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = Array.from(e.dataTransfer.files);
+            addFiles(files);
+        }
+
+        function handleFileSelect(e) {
+            const files = Array.from(e.target.files);
+            addFiles(files);
+        }
+
+        function addFiles(files) {
+            const validFiles = files.filter(file => {
+                const validTypes = ['.pdf', '.docx', '.xlsx', '.txt', '.doc', '.xls'];
+                const extension = '.' + file.name.split('.').pop().toLowerCase();
+                const isValidType = validTypes.includes(extension);
+                const isValidSize = file.size <= 50 * 1024 * 1024; // 50MB
+
+                if (!isValidType) {
+                    showStatus(`${file.name}: Unsupported file type`, 'error');
+                    return false;
+                }
+                if (!isValidSize) {
+                    showStatus(`${file.name}: File too large (max 50MB)`, 'error');
+                    return false;
+                }
+                return true;
+            });
+
+            selectedFiles = [...selectedFiles, ...validFiles];
+            updateFileList();
+            
+            if (selectedFiles.length > 0) {
+                fileListContainer.style.display = 'block';
+            }
+        }
+
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-icon">
+                            <svg fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                            </svg>
+                        </div>
+                        <div class="file-details">
+                            <h4>${file.name}</h4>
+                            <p>${formatFileSize(file.size)}</p>
+                        </div>
+                    </div>
+                    <button class="remove-btn" onclick="removeFile(${index})">Remove</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        function removeFile(index) {
+            selectedFiles.splice(index, 1);
+            updateFileList();
+            if (selectedFiles.length === 0) {
+                fileListContainer.style.display = 'none';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        async function uploadFiles() {
+            if (selectedFiles.length === 0) return;
+
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+            progressContainer.style.display = 'block';
+
+            let completed = 0;
+            const total = selectedFiles.length;
+
+            for (const file of selectedFiles) {
+                try {
+                    const formData = new FormData();
+                    formData.append('document', file);
+
+                    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        completed++;
+                        const progress = (completed / total) * 100;
+                        progressFill.style.width = `${progress}%`;
+                        progressText.textContent = `${completed} of ${total} files uploaded`;
+                        showStatus(`✅ ${file.name} uploaded successfully`, 'success');
+                    } else {
+                        const error = await response.text();
+                        showStatus(`❌ ${file.name}: Upload failed - ${error}`, 'error');
+                    }
+                } catch (error) {
+                    showStatus(`❌ ${file.name}: Network error - ${error.message}`, 'error');
+                }
+            }
+
+            if (completed === total) {
+                showStatus(`🎉 All ${total} files uploaded successfully! You can now start learning with your AI tutor.`, 'success');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            }
+
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'Upload Files';
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusMessages.appendChild(statusDiv);
+            
+            // Auto-remove after 5 seconds for non-success messages
+            if (type !== 'success') {
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.parentNode.removeChild(statusDiv);
+                    }
+                }, 5000);
+            }
+        }
+
+        // Show initial status
+        showStatus('📱 Fallback upload page loaded successfully - React-independent upload system', 'info');
+    </script>
+</body>
+</html>
