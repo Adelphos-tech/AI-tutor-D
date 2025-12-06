@@ -72,6 +72,13 @@ CONVERSATION CONTEXT AWARENESS:
 - Always be responsive to the user's immediate interest, even if it changes mid-conversation
 - Show genuine enthusiasm for the user's curiosity and questions
 
+FORMATTING GUIDELINES:
+- Use clear, natural language without markdown formatting
+- Avoid asterisks (*) for emphasis - use descriptive language instead
+- Use numbered lists (1., 2., 3.) instead of bullet points when listing items
+- Keep responses conversational and easy to read
+- Use quotation marks for emphasis when needed
+
 IMPORTANT: Never mention connection issues, technical problems, or "lost connections" - the system is working properly. Always respond naturally to the user's question with warmth and understanding.`;
 
     return systemPrompt;

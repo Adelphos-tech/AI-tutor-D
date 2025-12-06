@@ -267,7 +267,7 @@ const DocumentUpload = () => {
                 </div>
                 <p className="text-sm text-blue-700 mt-2">
                   {uploadState.completed.length === uploadState.files.length 
-                    ? 'All files uploaded successfully!' 
+                    ? 'All files uploaded successfully! Navigate to the Dashboard to start chatting with your documents.' 
                     : 'Uploading and processing your documents...'
                   }
                 </p>
@@ -348,6 +348,15 @@ const DocumentUpload = () => {
 
             {/* Upload Button */}
             <div className="mt-6 flex justify-end space-x-3">
+              {allUploaded && (
+                <button
+                  onClick={() => navigate('/dashboard')}
+                  className="btn btn-primary bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Go to Dashboard
+                </button>
+              )}
               <button
                 onClick={() => setUploadState({ files: [], uploading: false, progress: {}, completed: [], errors: [] })}
                 disabled={uploadState.uploading}
