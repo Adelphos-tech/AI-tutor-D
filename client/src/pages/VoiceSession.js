@@ -219,12 +219,18 @@ const VoiceSession = () => {
                   {supportedLanguages.map((language) => (
                     <button
                       key={language.code}
-                      onClick={() => {
+                      onClick={async () => {
+                        console.log('🌍 Language changed to:', language);
                         setSelectedLanguage(language);
                         setShowLanguageSelector(false);
                         // Restart voice client if it's connected to apply new language
                         if (voiceStatus === 'connected' || voiceStatus === 'listening') {
-                          stopVoiceConversation();
+                          console.log('🔄 Restarting voice client for new language');
+                          await stopVoiceConversation();
+                          // Small delay before restarting
+                          setTimeout(() => {
+                            startVoiceConversation();
+                          }, 500);
                         }
                       }}
                       className={`mobile-button w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${

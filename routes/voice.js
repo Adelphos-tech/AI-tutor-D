@@ -119,12 +119,13 @@ router.post('/synthesize', upload.none(), async (req, res) => {
     const selectedModel = voiceModelMap[language] || voice || 'aura-asteria-en';
     console.log(`Using TTS model: ${selectedModel} for language: ${language}`);
 
-    // Add language parameter to help with pronunciation
+    // Add language parameter to help with pronunciation (remove if causing issues)
     const ttsOptions = { 
-      model: selectedModel,
-      language: language === 'zh' ? 'zh-CN' : (language === 'ms' ? 'ms' : 'en-US')
+      model: selectedModel
+      // Note: Deepgram TTS may not support language parameter, using model selection instead
     };
 
+    console.log(`🎵 TTS request - Model: ${selectedModel}, Language: ${language}, Text: ${text.substring(0, 50)}...`);
     const audioBuffer = await voiceService.synthesizeSpeech(text, ttsOptions);
     
     res.set({
@@ -136,9 +137,17 @@ router.post('/synthesize', upload.none(), async (req, res) => {
     res.send(audioBuffer);
   } catch (error) {
     console.error('Error synthesizing speech:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      language: req.body.language,
+      voice: req.body.voice,
+      textLength: req.body.text?.length
+    });
     res.status(500).json({ 
       error: 'Failed to synthesize speech',
-      message: error.message 
+      message: error.message,
+      details: error.stack
     });
   }
 });
