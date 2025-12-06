@@ -208,43 +208,44 @@ const ChatSession = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex flex-col h-screen bg-gray-50 mobile-optimized">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-4">
+      <div className="bg-white border-b border-gray-200 mobile-header">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
             <button
               onClick={() => navigate(`/document/${session.document_id}`)}
-              className="btn btn-ghost btn-sm"
+              className="mobile-button btn btn-ghost btn-sm flex-shrink-0"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden xs:inline">Back</span>
             </button>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                 {session.session_name}
               </h1>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
-                <BookOpen className="h-4 w-4" />
-                <span>{session.section_title}</span>
-                <span>•</span>
-                <span>{session.original_name}</span>
+              <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-500">
+                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="truncate">{session.section_title}</span>
+                <span className="hidden sm:inline">•</span>
+                <span className="truncate hidden sm:inline">{session.original_name}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="mobile-button flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 <Globe className="h-4 w-4" />
-                <span className="text-sm font-medium">{selectedLanguage.flag} {selectedLanguage.name}</span>
+                <span className="text-xs sm:text-sm font-medium hidden xs:inline">{selectedLanguage.flag} {selectedLanguage.name}</span>
+                <span className="text-sm xs:hidden">{selectedLanguage.flag}</span>
               </button>
               
               {showLanguageSelector && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px]">
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px] mobile-dropdown">
                   {supportedLanguages.map((language) => (
                     <button
                       key={language.code}
@@ -252,7 +253,7 @@ const ChatSession = () => {
                         setSelectedLanguage(language);
                         setShowLanguageSelector(false);
                       }}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
+                      className={`mobile-button w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
                         selectedLanguage.code === language.code ? 'bg-blue-50 text-blue-600' : ''
                       }`}
                     >
@@ -264,7 +265,7 @@ const ChatSession = () => {
               )}
             </div>
             
-            <div className="flex items-center text-green-600">
+            <div className="hidden sm:flex items-center text-green-600">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               <span className="text-sm font-medium">Active</span>
             </div>
@@ -273,30 +274,30 @@ const ChatSession = () => {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto mobile-content space-y-4 sm:space-y-6 custom-scrollbar">
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center py-12">
-            <Bot className="h-12 w-12 text-primary-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <div className="text-center py-8 sm:py-12">
+            <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-primary-600 mx-auto mb-4" />
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
               Welcome to your AI Tutor!
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto px-4">
               I'm here to help you learn about "{session.section_title}". 
               Ask me anything about this section, and I'll provide detailed explanations.
             </p>
             
             {/* Suggested Questions */}
-            <div className="max-w-2xl mx-auto">
-              <p className="text-sm font-medium text-gray-700 mb-3">
-                <HelpCircle className="h-4 w-4 inline mr-1" />
+            <div className="max-w-2xl mx-auto px-4">
+              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-3">
+                <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
                 Try asking:
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:gap-3">
                 {suggestedQuestions.map((question, index) => (
                   <button
                     key={index}
                     onClick={() => setInputMessage(question)}
-                    className="text-left p-3 text-sm bg-white border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    className="mobile-button text-left p-3 sm:p-4 text-xs sm:text-sm bg-white border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
                   >
                     "{question}"
                   </button>
@@ -400,8 +401,8 @@ const ChatSession = () => {
       </div>
 
       {/* Input */}
-      <div className="bg-white border-t border-gray-200 px-4 py-4">
-        <div className="flex space-x-3">
+      <div className="bg-white border-t border-gray-200 mobile-header safe-area-bottom">
+        <div className="flex space-x-2 sm:space-x-3">
           <div className="flex-1">
             <textarea
               ref={inputRef}
@@ -409,11 +410,11 @@ const ChatSession = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about this section..."
-              className="textarea resize-none"
+              className="mobile-input textarea resize-none text-base sm:text-sm"
               rows={1}
               disabled={sending}
               style={{
-                minHeight: '40px',
+                minHeight: '44px',
                 maxHeight: '120px',
                 height: 'auto',
                 overflow: 'hidden'
@@ -427,7 +428,7 @@ const ChatSession = () => {
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || sending}
-            className="btn btn-primary btn-md"
+            className="mobile-button btn btn-primary flex-shrink-0 px-3 sm:px-4 py-3 sm:py-2"
           >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

@@ -91,20 +91,20 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 mobile-optimized">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Manage your documents and start learning sessions
           </p>
         </div>
         <Link
           to="/upload"
-          className="btn btn-primary btn-lg"
+          className="mobile-button btn btn-primary w-full sm:w-auto px-6 py-3 sm:btn-lg"
         >
-          <Upload className="h-5 w-5 mr-2" />
+          <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           Upload Document
         </Link>
       </div>

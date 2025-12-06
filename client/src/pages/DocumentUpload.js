@@ -191,19 +191,19 @@ const DocumentUpload = () => {
   const allUploaded = uploadState.completed.length === uploadState.files.length && uploadState.files.length > 0;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mobile-optimized mobile-content">
       {/* Header */}
-      <div className="flex items-center space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
         <button
           onClick={() => navigate('/')}
-          className="btn btn-ghost btn-sm"
+          className="mobile-button btn btn-ghost btn-sm self-start"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Dashboard
         </button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Upload Documents</h1>
-          <p className="mt-2 text-gray-600">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Upload Documents</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
             Upload your educational materials to start learning with AI
           </p>
         </div>

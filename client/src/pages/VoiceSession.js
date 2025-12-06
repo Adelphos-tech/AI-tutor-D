@@ -178,39 +178,40 @@ const VoiceSession = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 mobile-optimized">
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto mobile-header">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
               <button
                 onClick={() => navigate('/')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="mobile-button p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  {session?.title || 'Voice Session'}
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center truncate">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                  <span className="truncate">{session?.title || 'Voice Session'}</span>
                 </h1>
-                <p className="text-sm text-gray-600">Natural AI Conversation</p>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Natural AI Conversation</p>
               </div>
             </div>
             
             {/* Language Selector */}
-            <div className="relative">
+            <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="mobile-button flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 <Globe className="h-4 w-4" />
-                <span className="text-sm font-medium">{selectedLanguage.flag} {selectedLanguage.name}</span>
+                <span className="text-xs sm:text-sm font-medium hidden xs:inline">{selectedLanguage.flag} {selectedLanguage.name}</span>
+                <span className="text-sm xs:hidden">{selectedLanguage.flag}</span>
               </button>
               
               {showLanguageSelector && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px]">
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px] mobile-dropdown">
                   {supportedLanguages.map((language) => (
                     <button
                       key={language.code}
@@ -222,7 +223,7 @@ const VoiceSession = () => {
                           stopVoiceConversation();
                         }
                       }}
-                      className={`w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
+                      className={`mobile-button w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
                         selectedLanguage.code === language.code ? 'bg-blue-50 text-blue-600' : ''
                       }`}
                     >
@@ -238,28 +239,28 @@ const VoiceSession = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-4xl mx-auto mobile-content">
         
         {/* Voice Status */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-6 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <Mic className={`h-8 w-8 mr-3 ${voiceStatus === 'listening' ? 'text-green-500 animate-pulse' : 'text-gray-400'}`} />
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Dr. Sarah Chen</h2>
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 text-center">
+          <div className="flex flex-col sm:flex-row items-center justify-center mb-4 space-y-2 sm:space-y-0 sm:space-x-3">
+            <Mic className={`h-8 w-8 sm:h-10 sm:w-10 ${voiceStatus === 'listening' ? 'text-green-500 animate-pulse' : 'text-gray-400'}`} />
+            <div className="text-center sm:text-left">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Dr. Sarah Chen</h2>
               <p className={`text-sm ${getStatusColor()}`}>{getStatusMessage()}</p>
             </div>
           </div>
           
           {/* Control Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 mb-4">
             {voiceStatus === 'disconnected' || voiceStatus === 'error' ? (
               <button
                 onClick={startVoiceConversation}
                 disabled={voiceStatus === 'connecting'}
-                className={`px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors ${
+                className={`mobile-button px-6 py-3 sm:py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors text-sm sm:text-base ${
                   voiceStatus === 'connecting'
                     ? 'bg-gray-400 cursor-not-allowed'
-                    : 'bg-green-500 hover:bg-green-600'
+                    : 'bg-green-500 hover:bg-green-600 active:bg-green-700'
                 } text-white`}
               >
                 {voiceStatus === 'connecting' ? (
@@ -267,15 +268,15 @@ const VoiceSession = () => {
                 ) : (
                   <Mic className="h-4 w-4" />
                 )}
-                <span>{voiceStatus === 'connecting' ? 'Connecting...' : 'Start Voice Conversation'}</span>
+                <span className="font-medium">{voiceStatus === 'connecting' ? 'Connecting...' : 'Start Voice Conversation'}</span>
               </button>
             ) : (
               <button
                 onClick={stopVoiceConversation}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-lg flex items-center space-x-2 transition-colors"
+                className="mobile-button bg-red-500 hover:bg-red-600 active:bg-red-700 text-white px-6 py-3 sm:py-2 rounded-lg flex items-center justify-center space-x-2 transition-colors text-sm sm:text-base"
               >
                 <MicOff className="h-4 w-4" />
-                <span>Stop Voice Conversation</span>
+                <span className="font-medium">Stop Voice Conversation</span>
               </button>
             )}
           </div>
