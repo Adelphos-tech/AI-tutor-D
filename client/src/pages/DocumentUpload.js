@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDropzone } from 'react-dropzone';
 import { documentAPI } from '../services/api';
@@ -190,6 +190,48 @@ const DocumentUpload = () => {
 
   const allUploaded = uploadState.completed.length === uploadState.files.length && uploadState.files.length > 0;
 
+  // Auto-redirect countdown when upload is complete
+  useEffect(() => {
+    let countdownInterval;
+    if (allUploaded) {
+      // Show browser notification if permission granted
+      if (Notification.permission === 'granted') {
+        new Notification('Upload Complete! 🎉', {
+          body: 'Your documents are ready. Starting your AI learning journey!',
+          icon: '/favicon.ico'
+        });
+      }
+      
+      let countdown = 10;
+      const countdownElement = document.getElementById('countdown');
+      
+      countdownInterval = setInterval(() => {
+        countdown -= 1;
+        if (countdownElement) {
+          countdownElement.textContent = countdown;
+        }
+        
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          navigate('/dashboard');
+        }
+      }, 1000);
+    }
+    
+    return () => {
+      if (countdownInterval) {
+        clearInterval(countdownInterval);
+      }
+    };
+  }, [allUploaded, navigate]);
+
+  // Request notification permission on component mount
+  useEffect(() => {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mobile-optimized mobile-content">
       {/* Header */}
@@ -346,17 +388,48 @@ const DocumentUpload = () => {
               ))}
             </div>
 
+            {/* Success Message and Navigation */}
+            {allUploaded && (
+              <div className="mt-6 bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-green-900 mb-2">
+                  🎉 Upload Complete!
+                </h3>
+                <p className="text-green-700 mb-4">
+                  All documents have been successfully uploaded and processed. 
+                  You can now start learning with your AI tutor!
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-3">
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="mobile-button btn btn-primary bg-green-600 hover:bg-green-700 px-6 py-3"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Go to Dashboard
+                  </button>
+                  <button
+                    onClick={() => navigate('/')}
+                    className="mobile-button btn btn-outline px-6 py-3"
+                  >
+                    Upload More Documents
+                  </button>
+                </div>
+                <div className="flex items-center justify-center gap-2 mt-3">
+                  <p className="text-xs text-green-600">
+                    Redirecting to dashboard in <span id="countdown">10</span> seconds...
+                  </p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Upload Button */}
             <div className="mt-6 flex justify-end space-x-3">
-              {allUploaded && (
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="btn btn-primary bg-green-600 hover:bg-green-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Go to Dashboard
-                </button>
-              )}
               <button
                 onClick={() => setUploadState({ files: [], uploading: false, progress: {}, completed: [], errors: [] })}
                 disabled={uploadState.uploading}
