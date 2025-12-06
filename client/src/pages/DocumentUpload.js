@@ -15,6 +15,10 @@ import {
 
 const DocumentUploadContent = () => {
   console.log('DocumentUpload component rendering...');
+  console.log('User agent:', navigator.userAgent);
+  console.log('Viewport:', window.innerWidth, 'x', window.innerHeight);
+  console.log('Is mobile:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  
   const navigate = useNavigate();
   const [uploadState, setUploadState] = useState({
     files: [],

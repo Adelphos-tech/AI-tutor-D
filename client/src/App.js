@@ -5,6 +5,7 @@ import LoadingFallback from './components/LoadingFallback';
 import Dashboard from './pages/Dashboard';
 import DocumentUpload from './pages/DocumentUpload';
 import TestUpload from './pages/TestUpload';
+import MobileDebug from './pages/MobileDebug';
 import DocumentView from './pages/DocumentView';
 import ChatSession from './pages/ChatSession';
 import VoiceSession from './pages/VoiceSession';
@@ -20,6 +21,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/upload" element={<DocumentUpload />} />
             <Route path="/test-upload" element={<TestUpload />} />
+            <Route path="/mobile-debug" element={<MobileDebug />} />
             <Route path="/document/:id" element={<DocumentView />} />
             <Route path="/chat/:sessionId" element={<ChatSession />} />
             <Route path="/voice/:sessionId" element={<VoiceSession />} />
