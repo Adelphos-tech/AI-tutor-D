@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 
 const DocumentUpload = () => {
+  console.log('DocumentUpload component rendering...');
   const navigate = useNavigate();
   const [uploadState, setUploadState] = useState({
     files: [],
