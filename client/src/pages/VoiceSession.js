@@ -18,12 +18,12 @@ const VoiceSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
-  // Language support - Updated with actual Deepgram test results
+  // Language support - Updated with multilingual TTS support
   const supportedLanguages = [
     { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US', deepgram: 'en-US', sttSupported: true, ttsSupported: true },
     { code: 'ta', name: 'Tamil', flag: '🇮🇳', voice: 'ta-IN', deepgram: 'en-US', sttSupported: false, ttsSupported: false }, // STT: English fallback, TTS: English voice
-    { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY', deepgram: 'ms', sttSupported: true, ttsSupported: false }, // STT: Native, TTS: English voice
-    { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN', deepgram: 'zh-CN', sttSupported: true, ttsSupported: false } // STT: Native, TTS: English voice
+    { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY', deepgram: 'ms', sttSupported: true, ttsSupported: true }, // STT: Native, TTS: Aura Luna
+    { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN', deepgram: 'zh-CN', sttSupported: true, ttsSupported: true } // STT: Native, TTS: Aura Stella
   ];
 
   // State management
@@ -296,6 +296,13 @@ const VoiceSession = () => {
                     {selectedLanguage.sttSupported && !selectedLanguage.ttsSupported && (
                       <>⚠️ Speech recognition in {selectedLanguage.name}. Voice responses in English. AI text responses in {selectedLanguage.name}.</>
                     )}
+                  </p>
+                </div>
+              )}
+              {selectedLanguage.sttSupported && selectedLanguage.ttsSupported && selectedLanguage.code !== 'en' && (
+                <div className="mt-2 bg-green-50 border border-green-200 rounded-lg p-3">
+                  <p className="text-green-800 text-xs">
+                    ✅ Full {selectedLanguage.name} support: Speech recognition, voice responses, and AI text responses.
                   </p>
                 </div>
               )}

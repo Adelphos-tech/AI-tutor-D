@@ -113,14 +113,20 @@ router.post('/synthesize', upload.none(), async (req, res) => {
     const voiceModelMap = {
       'en': 'aura-asteria-en',
       'ta': 'aura-asteria-en', // Fallback to English
-      'ms': 'aura-asteria-en', // Fallback to English
-      'zh': 'aura-asteria-en'  // Fallback to English for now
+      'ms': 'aura-luna-en',    // Use Luna for Malay
+      'zh': 'aura-stella-en'   // Use Stella for Chinese (works with Chinese text)
     };
 
     const selectedModel = voiceModelMap[language] || voice || 'aura-asteria-en';
     console.log(`Using TTS model: ${selectedModel} for language: ${language}`);
 
-    const audioBuffer = await voiceService.synthesizeSpeech(text, { model: selectedModel });
+    // Add language parameter to help with pronunciation
+    const ttsOptions = { 
+      model: selectedModel,
+      language: language === 'zh' ? 'zh-CN' : (language === 'ms' ? 'ms' : 'en-US')
+    };
+
+    const audioBuffer = await voiceService.synthesizeSpeech(text, ttsOptions);
     
     res.set({
       'Content-Type': 'audio/wav',
