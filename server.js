@@ -102,13 +102,90 @@ if (process.env.NODE_ENV === 'production') {
   // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
     console.log('Serving React app for route:', req.path);
+    
+    // Special handling for mobile user agents on upload route
+    const userAgent = req.get('User-Agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    const isUploadRoute = req.path === '/upload';
+    
     if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
+      // For mobile devices on upload route, inject mobile-specific fixes
+      if (isMobile && isUploadRoute) {
+        console.log('Mobile device detected on upload route, injecting fixes...');
+        
+        // Read the index.html and inject mobile fixes
+        let html = fs.readFileSync(indexPath, 'utf8');
+        
+        // Inject mobile-specific meta tags and scripts
+        const mobileFixesScript = `
+          <script>
+            console.log('🔧 Mobile upload fixes injected by server');
+            
+            // Force React to load upload component
+            window.addEventListener('DOMContentLoaded', function() {
+              console.log('📱 DOM loaded, checking for React...');
+              
+              // Wait for React to load, then force navigation to upload
+              let attempts = 0;
+              const checkReact = setInterval(function() {
+                attempts++;
+                console.log('Attempt', attempts, 'checking for React...');
+                
+                if (window.React || document.querySelector('[data-reactroot]') || document.querySelector('#root').children.length > 0) {
+                  console.log('✅ React detected, clearing interval');
+                  clearInterval(checkReact);
+                  
+                  // Force navigation to upload if not already there
+                  setTimeout(function() {
+                    if (!window.location.pathname.includes('upload')) {
+                      console.log('🔄 Forcing navigation to upload...');
+                      window.history.pushState({}, '', '/upload');
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    }
+                  }, 100);
+                  
+                } else if (attempts > 50) { // 5 seconds timeout
+                  console.log('❌ React failed to load, redirecting to fallback...');
+                  clearInterval(checkReact);
+                  window.location.href = '/upload-fallback.html';
+                }
+              }, 100);
+            });
+            
+            // iOS Safari specific fixes
+            if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+              console.log('🍎 iOS Safari detected, applying fixes...');
+              
+              // Prevent iOS Safari from caching the page incorrectly
+              window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                  console.log('🔄 Page restored from cache, reloading...');
+                  window.location.reload();
+                }
+              });
+              
+              // Fix viewport issues
+              const viewport = document.querySelector('meta[name=viewport]');
+              if (viewport) {
+                viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+              }
+            }
+          </script>
+        `;
+        
+        // Inject the script before closing head tag
+        html = html.replace('</head>', mobileFixesScript + '</head>');
+        
+        res.send(html);
+      } else {
+        // Normal React serving for non-mobile or non-upload routes
+        res.sendFile(indexPath);
+      }
     } else {
       console.error('❌ index.html not found at:', indexPath);
       // If it's the upload route and React fails, redirect to fallback
       if (req.path === '/upload') {
-        res.redirect('/upload-fallback');
+        res.redirect('/upload-fallback.html');
       } else {
         res.status(404).send(`
           <html>
@@ -118,7 +195,7 @@ if (process.env.NODE_ENV === 'production') {
               <p>Index.html path: ${indexPath}</p>
               <p>Files in build directory:</p>
               <pre>${fs.existsSync(buildPath) ? fs.readdirSync(buildPath).join('\n') : 'Build directory does not exist'}</pre>
-              <p><a href="/upload-fallback">Try Upload Fallback Page</a></p>
+              <p><a href="/upload-fallback.html">Try Upload Fallback Page</a></p>
             </body>
           </html>
         `);

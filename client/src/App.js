@@ -15,13 +15,40 @@ import VoiceSession from './pages/VoiceSession';
 function App() {
   console.log('App component rendering...');
   
+  // Mobile-specific route handling
+  React.useEffect(() => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const currentPath = window.location.pathname;
+    
+    if (isMobile && currentPath === '/upload') {
+      console.log('📱 Mobile device on upload route detected in React');
+      
+      // Ensure the upload component loads properly on mobile
+      const ensureUploadLoads = () => {
+        const uploadElement = document.querySelector('[data-upload-component]');
+        if (!uploadElement) {
+          console.log('🔄 Upload component not found, forcing re-render...');
+          // Force a re-render by updating the URL
+          window.history.replaceState({}, '', '/upload');
+        }
+      };
+      
+      // Check after a short delay
+      setTimeout(ensureUploadLoads, 1000);
+    }
+  }, []);
+  
   return (
     <Router>
       <Layout>
         <Suspense fallback={<LoadingFallback message="Loading application..." />}>
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/upload" element={<DocumentUpload />} />
+            <Route path="/upload" element={
+              <div data-upload-component="true">
+                <DocumentUpload />
+              </div>
+            } />
             <Route path="/test-upload" element={<TestUpload />} />
             <Route path="/mobile-debug" element={<MobileDebug />} />
             <Route path="/document/:id" element={<DocumentView />} />
