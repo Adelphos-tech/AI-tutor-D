@@ -19,10 +19,9 @@ const ChatSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
-  // Language support - Updated with multilingual TTS support
+  // Language support - Removed Tamil due to limited support
   const supportedLanguages = [
     { code: 'en', name: 'English', flag: '🇺🇸', sttSupported: true, ttsSupported: true },
-    { code: 'ta', name: 'Tamil', flag: '🇮🇳', sttSupported: false, ttsSupported: false },
     { code: 'ms', name: 'Malay', flag: '🇲🇾', sttSupported: true, ttsSupported: true },
     { code: 'zh', name: 'Chinese', flag: '🇨🇳', sttSupported: true, ttsSupported: true }
   ];

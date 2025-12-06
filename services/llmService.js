@@ -12,7 +12,6 @@ class LLMService {
     // Language-specific instructions
     const languageInstructions = {
       'en': 'Respond in clear, natural English.',
-      'ta': 'Respond in Tamil (தமிழ்). Use clear, educational Tamil language appropriate for academic discussions.',
       'ms': 'Respond in Malay (Bahasa Melayu). Use clear, educational Malay language appropriate for academic discussions.',
       'zh': 'Respond in Simplified Chinese (简体中文). Use clear, educational Chinese language appropriate for academic discussions.'
     };

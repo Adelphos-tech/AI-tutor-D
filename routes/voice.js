@@ -112,7 +112,6 @@ router.post('/synthesize', upload.none(), async (req, res) => {
     // Map language codes to appropriate voice models
     const voiceModelMap = {
       'en': 'aura-asteria-en',
-      'ta': 'aura-asteria-en', // Fallback to English
       'ms': 'aura-luna-en',    // Use Luna for Malay
       'zh': 'aura-stella-en'   // Use Stella for Chinese (works with Chinese text)
     };

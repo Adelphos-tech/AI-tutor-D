@@ -18,10 +18,9 @@ const VoiceSession = () => {
   const { sessionId } = useParams();
   const navigate = useNavigate();
   
-  // Language support - Updated with multilingual TTS support
+  // Language support - Removed Tamil due to limited support
   const supportedLanguages = [
     { code: 'en', name: 'English', flag: '🇺🇸', voice: 'en-US', deepgram: 'en-US', sttSupported: true, ttsSupported: true },
-    { code: 'ta', name: 'Tamil', flag: '🇮🇳', voice: 'ta-IN', deepgram: 'en-US', sttSupported: false, ttsSupported: false }, // STT: English fallback, TTS: English voice
     { code: 'ms', name: 'Malay', flag: '🇲🇾', voice: 'ms-MY', deepgram: 'ms', sttSupported: true, ttsSupported: true }, // STT: Native, TTS: Aura Luna
     { code: 'zh', name: 'Chinese', flag: '🇨🇳', voice: 'zh-CN', deepgram: 'zh-CN', sttSupported: true, ttsSupported: true } // STT: Native, TTS: Aura Stella
   ];
