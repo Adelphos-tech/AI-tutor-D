@@ -557,30 +557,12 @@ const DocumentUploadContent = () => {
 
 // Wrapper component with error boundary
 const DocumentUpload = () => {
-  try {
-    console.log('DocumentUpload wrapper rendering...');
-    return (
-      <Suspense fallback={<LoadingFallback message="Loading upload page..." />}>
-        <DocumentUploadContent />
-      </Suspense>
-    );
-  } catch (error) {
-    console.error('DocumentUpload error:', error);
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center p-8">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Upload Page Error</h1>
-          <p className="text-gray-600 mb-4">There was an error loading the upload page.</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Reload Page
-          </button>
-        </div>
-      </div>
-    );
-  }
+  console.log('DocumentUpload wrapper rendering...');
+  return (
+    <Suspense fallback={<LoadingFallback message="Loading upload page..." />}>
+      <DocumentUploadContent />
+    </Suspense>
+  );
 };
 
 export default DocumentUpload;
