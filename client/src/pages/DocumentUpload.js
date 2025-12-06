@@ -90,10 +90,14 @@ const DocumentUpload = () => {
           }
         );
 
+        // Show upload success message
+        console.log('✅ Document uploaded successfully:', response);
+        
         // Show processing stage after upload completes
         if (response.processing && response.processingId) {
           // Connect to real-time progress stream
-          const eventSource = new EventSource(`/api/documents/progress/${response.processingId}`);
+          const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+          const eventSource = new EventSource(`${API_BASE_URL}/documents/progress/${response.processingId}`);
           
           eventSource.onmessage = (event) => {
             const progressData = JSON.parse(event.data);
