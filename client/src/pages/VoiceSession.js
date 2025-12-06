@@ -69,16 +69,20 @@ const VoiceSession = () => {
   const initializeNaturalVoiceClient = async () => {
     try {
       console.log('🎙️ Initializing natural voice conversation...');
+      console.log('🌍 Selected language:', selectedLanguage);
       setVoiceStatus('connecting');
       
       // Use Deepgram API key
       const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
       
-      const client = new NaturalVoiceClient(sessionId, deepgramApiKey, {
+      const voiceOptions = {
         language: selectedLanguage.deepgram,
         languageCode: selectedLanguage.code,
         voiceLanguage: selectedLanguage.voice
-      });
+      };
+      console.log('🎙️ Voice client options:', voiceOptions);
+      
+      const client = new NaturalVoiceClient(sessionId, deepgramApiKey, voiceOptions);
       voiceClientRef.current = client;
 
       // Set up event handlers

@@ -26,6 +26,7 @@ class NaturalVoiceClient {
     this.conversationHistory = [];
     this.currentAudio = null;
     this.isPlaying = false;
+    this.interimTimeout = null;
     
     // Event handlers
     this.onTranscript = null;
@@ -66,7 +67,7 @@ class NaturalVoiceClient {
         smart_format: false, // Disable for speed
         interim_results: true,
         vad_events: true,
-        endpointing: 200, // Faster endpoint detection
+        endpointing: this.language === 'zh-CN' ? 500 : 200, // Longer endpointing for Chinese
         no_delay: true, // Reduce processing delay
         punctuate: false, // Skip punctuation for speed
         profanity_filter: false // Skip filtering for speed
@@ -181,10 +182,21 @@ class NaturalVoiceClient {
 
       // Process final transcripts for conversation
       if (isFinal && transcript.trim().length > 2) {
+        console.log('🎯 Processing final transcript:', transcript);
         // Small delay to ensure audio interruption is complete
         setTimeout(() => {
           this.processUserMessage(transcript.trim());
         }, 100);
+      } else if (!isFinal && transcript.trim().length > 5) {
+        // For Chinese, also process longer interim transcripts after a delay
+        // This helps when endpointing doesn't work perfectly
+        clearTimeout(this.interimTimeout);
+        this.interimTimeout = setTimeout(() => {
+          if (transcript.trim().length > 5) {
+            console.log('🎯 Processing interim transcript (Chinese fallback):', transcript);
+            this.processUserMessage(transcript.trim());
+          }
+        }, 2000); // Wait 2 seconds of silence
       }
     }
   }
