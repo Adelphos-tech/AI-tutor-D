@@ -9,6 +9,8 @@ const router = express.Router();
 async function handleRegularMessage(sessionId, message, language = 'en') {
   let client = null;
   
+  console.log(`🌍 handleRegularMessage called with language: ${language} for message: ${message}`);
+  
   try {
     client = await pool.connect();
     
@@ -59,6 +61,7 @@ async function handleRegularMessage(sessionId, message, language = 'en') {
       context = `${context}\n\nAdditional relevant content:\n${additionalContext}`;
     }
     
+    console.log(`🤖 Calling LLM service with language: ${language}`);
     const aiResponse = await llmService.generateResponse(
       message,
       context,
@@ -66,6 +69,7 @@ async function handleRegularMessage(sessionId, message, language = 'en') {
       conversationHistory,
       language
     );
+    console.log(`📝 LLM response: ${aiResponse.substring(0, 100)}...`);
     
     // Save messages to database
     await client.query(`

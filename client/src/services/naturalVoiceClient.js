@@ -8,6 +8,12 @@ class NaturalVoiceClient {
     this.languageCode = options.languageCode || 'en'; // LLM language code
     this.voiceLanguage = options.voiceLanguage || 'en-US'; // TTS language code
     
+    console.log('🎙️ NaturalVoiceClient initialized with:', {
+      language: this.language,
+      languageCode: this.languageCode,
+      voiceLanguage: this.voiceLanguage
+    });
+    
     // Initialize Deepgram client
     this.deepgram = createClient(deepgramApiKey);
     this.connection = null;
@@ -65,6 +71,8 @@ class NaturalVoiceClient {
         punctuate: false, // Skip punctuation for speed
         profanity_filter: false // Skip filtering for speed
       };
+
+      console.log(`🌍 Deepgram config for language: ${this.language}`, deepgramConfig);
 
       // Create the connection
       console.log('🔗 Creating Deepgram live connection...');
@@ -184,6 +192,7 @@ class NaturalVoiceClient {
   async processUserMessage(message) {
     try {
       console.log('🤖 Processing user message:', message);
+      console.log('🌍 Using language code:', this.languageCode);
       this.onStatusChange?.('processing');
 
       // Stop any current audio playback
