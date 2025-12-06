@@ -27,6 +27,7 @@ class NaturalVoiceClient {
     this.currentAudio = null;
     this.isPlaying = false;
     this.interimTimeout = null;
+    this.lastProcessedTranscript = null;
     
     // Event handlers
     this.onTranscript = null;
@@ -183,8 +184,11 @@ class NaturalVoiceClient {
       // Process final transcripts for conversation
       if (isFinal && transcript.trim().length > 2) {
         console.log('🎯 Processing final transcript:', transcript);
+        // Clear any pending interim timeout since we got a final transcript
+        clearTimeout(this.interimTimeout);
         // Small delay to ensure audio interruption is complete
         setTimeout(() => {
+          this.lastProcessedTranscript = transcript.trim();
           this.processUserMessage(transcript.trim());
         }, 100);
       } else if (!isFinal && transcript.trim().length > 5) {
@@ -192,8 +196,10 @@ class NaturalVoiceClient {
         // This helps when endpointing doesn't work perfectly
         clearTimeout(this.interimTimeout);
         this.interimTimeout = setTimeout(() => {
-          if (transcript.trim().length > 5) {
+          // Only process if we haven't received a final transcript
+          if (transcript.trim().length > 5 && !this.lastProcessedTranscript) {
             console.log('🎯 Processing interim transcript (Chinese fallback):', transcript);
+            this.lastProcessedTranscript = transcript.trim();
             this.processUserMessage(transcript.trim());
           }
         }, 2000); // Wait 2 seconds of silence
@@ -258,9 +264,14 @@ class NaturalVoiceClient {
       }
 
     } catch (error) {
-      console.error('❌ Error processing message:', error);
-      this.onError?.(`Processing error: ${error.message}`);
-      this.onStatusChange?.('listening');
+      console.error('❌ Error processing user message:', error);
+      this.onError?.(error);
+      this.onStatusChange?.('error');
+    } finally {
+      // Reset processed transcript after a delay to allow for new messages
+      setTimeout(() => {
+        this.lastProcessedTranscript = null;
+      }, 5000);
     }
   }
 
