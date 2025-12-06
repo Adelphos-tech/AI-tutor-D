@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Upload, Home, Brain } from 'lucide-react';
 
 const Layout = ({ children }) => {
@@ -29,9 +29,9 @@ const Layout = ({ children }) => {
               {navigation.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <Link
+                  <a
                     key={item.name}
-                    to={item.href}
+                    href={item.href}
                     className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors ${
                       isActive(item.href)
                         ? 'text-primary-600 border-b-2 border-primary-600'
@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
                   >
                     <Icon className="h-4 w-4 mr-2" />
                     {item.name}
-                  </Link>
+                  </a>
                 );
               })}
             </nav>
@@ -54,9 +54,9 @@ const Layout = ({ children }) => {
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
-              <Link
+              <a
                 key={item.name}
-                to={item.href}
+                href={item.href}
                 className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive(item.href)
                     ? 'bg-primary-50 text-primary-600'
@@ -65,7 +65,7 @@ const Layout = ({ children }) => {
               >
                 <Icon className="h-4 w-4 mr-3" />
                 {item.name}
-              </Link>
+              </a>
             );
           })}
         </div>
