@@ -240,6 +240,18 @@ const DocumentUploadContent = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mobile-optimized mobile-content">
+      {/* Mobile Debug Status */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+        <div className="flex items-center space-x-2">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <span className="text-sm text-green-800 font-medium">DocumentUpload Component Loaded Successfully</span>
+        </div>
+        <div className="text-xs text-green-700 mt-1">
+          Mobile: {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Yes' : 'No'} | 
+          Viewport: {window.innerWidth}x{window.innerHeight} | 
+          Time: {new Date().toLocaleTimeString()}
+        </div>
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
         <button

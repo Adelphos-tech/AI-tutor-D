@@ -2,6 +2,8 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import LoadingFallback from './components/LoadingFallback';
+import VisualLogger from './components/VisualLogger';
+import MobileErrorDisplay from './components/MobileErrorDisplay';
 import Dashboard from './pages/Dashboard';
 import DocumentUpload from './pages/DocumentUpload';
 import TestUpload from './pages/TestUpload';
@@ -39,6 +41,8 @@ function App() {
           </Routes>
         </Suspense>
       </Layout>
+      <VisualLogger />
+      <MobileErrorDisplay />
     </Router>
   );
 }
