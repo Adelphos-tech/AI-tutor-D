@@ -35,6 +35,11 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // Ensure upload directory exists
 fs.ensureDirSync(process.env.UPLOAD_DIR || './uploads');
 
+// Health check endpoint (must be before catch-all route)
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Routes
 app.use('/api/documents', documentRoutes);
 app.use('/api/chat', chatRoutes);
@@ -42,17 +47,37 @@ app.use('/api/voice', voiceRoutes);
 
 // Serve static files from React app in production
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, 'client/build')));
+  const buildPath = path.join(__dirname, 'client/build');
+  const indexPath = path.join(buildPath, 'index.html');
   
+  console.log('Production mode - serving static files from:', buildPath);
+  console.log('Index.html exists:', fs.existsSync(indexPath));
+  
+  app.use(express.static(buildPath));
+  
+  // Catch-all handler: send back React's index.html file for any non-API routes
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    console.log('Serving React app for route:', req.path);
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error('❌ index.html not found at:', indexPath);
+      res.status(404).send(`
+        <html>
+          <body>
+            <h1>Build Error</h1>
+            <p>React build files not found at: ${buildPath}</p>
+            <p>Index.html path: ${indexPath}</p>
+            <p>Files in build directory:</p>
+            <pre>${fs.existsSync(buildPath) ? fs.readdirSync(buildPath).join('\n') : 'Build directory does not exist'}</pre>
+          </body>
+        </html>
+      `);
+    }
   });
+} else {
+  console.log('Development mode - not serving static files');
 }
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
