@@ -58,44 +58,37 @@ if (process.env.NODE_ENV === 'production') {
   // Serve public files (including fallback pages)
   app.use(express.static(path.join(__dirname, 'client/public')));
   
-  // Special route for upload fallback
-  app.get('/upload-fallback', (req, res) => {
-    const fallbackPath = path.join(__dirname, 'client/public/upload-fallback.html');
-    console.log('Looking for fallback at:', fallbackPath);
-    console.log('File exists:', fs.existsSync(fallbackPath));
+  // DIRECT UPLOAD ROUTE - bypasses React completely for mobile
+  app.get('/upload', (req, res) => {
+    const userAgent = req.get('User-Agent') || '';
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
     
-    if (fs.existsSync(fallbackPath)) {
-      res.sendFile(fallbackPath);
-    } else {
-      // Try alternative paths
-      const altPath1 = path.join(__dirname, 'client/build/upload-fallback.html');
-      const altPath2 = path.join(buildPath, 'upload-fallback.html');
+    if (isMobile) {
+      console.log('📱 Mobile device detected - serving direct upload page');
+      const uploadPath = path.join(buildPath, 'upload-fallback.html');
       
-      console.log('Trying alternative paths:');
-      console.log('Alt path 1:', altPath1, 'exists:', fs.existsSync(altPath1));
-      console.log('Alt path 2:', altPath2, 'exists:', fs.existsSync(altPath2));
-      
-      if (fs.existsSync(altPath1)) {
-        res.sendFile(altPath1);
-      } else if (fs.existsSync(altPath2)) {
-        res.sendFile(altPath2);
-      } else {
-        res.status(404).send(`
-          <html>
-            <body>
-              <h1>Upload fallback page not found</h1>
-              <p>Searched paths:</p>
-              <ul>
-                <li>${fallbackPath}</li>
-                <li>${altPath1}</li>
-                <li>${altPath2}</li>
-              </ul>
-              <p>Available files in client/public:</p>
-              <pre>${fs.existsSync(path.join(__dirname, 'client/public')) ? fs.readdirSync(path.join(__dirname, 'client/public')).join('\n') : 'Directory not found'}</pre>
-            </body>
-          </html>
-        `);
+      if (fs.existsSync(uploadPath)) {
+        res.sendFile(uploadPath);
+        return;
       }
+    }
+    
+    // For desktop or if mobile fallback not found, serve React app
+    console.log('🖥️ Desktop or fallback - serving React app');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send('React app not found');
+    }
+  });
+
+  // Keep fallback route for direct access
+  app.get('/upload-fallback', (req, res) => {
+    const uploadPath = path.join(buildPath, 'upload-fallback.html');
+    if (fs.existsSync(uploadPath)) {
+      res.sendFile(uploadPath);
+    } else {
+      res.status(404).send('Upload page not found');
     }
   });
 
