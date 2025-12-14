@@ -223,14 +223,23 @@ class DocumentProcessor extends EventEmitter {
       
       client = await pool.connect();
       
-      // Initialize Pinecone if not already initialized
+      // Initialize Pinecone if not already initialized (with timeout)
       const { initializePinecone, getPineconeIndex } = require('../config/pinecone');
+      let index = null;
+      let pineconeAvailable = false;
+      
       try {
-        await initializePinecone();
+        await Promise.race([
+          initializePinecone(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Pinecone initialization timeout')), 10000))
+        ]);
+        index = getPineconeIndex();
+        pineconeAvailable = true;
+        console.log('✅ Pinecone initialized successfully');
       } catch (error) {
-        console.log('Pinecone already initialized or initialization failed:', error.message);
+        console.warn('⚠️ Pinecone not available, proceeding without vector storage:', error.message);
+        pineconeAvailable = false;
       }
-      const index = getPineconeIndex();
       
       for (let sectionIndex = 0; sectionIndex < sections.length; sectionIndex++) {
         const section = sections[sectionIndex];
@@ -250,27 +259,42 @@ class DocumentProcessor extends EventEmitter {
         const chunks = embeddingService.chunkText(section.content);
         const vectorIds = [];
         
-        // Generate embeddings for each chunk
+        // Generate embeddings for each chunk (with timeout protection)
         for (let i = 0; i < chunks.length; i++) {
           const chunk = chunks[i];
-          const embedding = await embeddingService.generateEmbedding(chunk.text);
-          
           const vectorId = `${documentId}_${section.sectionNumber}_${i}`;
           vectorIds.push(vectorId);
           
-          // Store in Pinecone
-          await index.upsert([{
-            id: vectorId,
-            values: embedding,
-            metadata: {
-              documentId: documentId,
-              sectionId: section.sectionNumber,
-              sectionTitle: section.title,
-              chunkIndex: i,
-              content: chunk.text,
-              wordCount: chunk.text.split(/\s+/).length
+          // Only generate embeddings and store in Pinecone if available
+          if (pineconeAvailable && index) {
+            try {
+              // Add timeout to embedding generation (5 seconds per chunk)
+              const embedding = await Promise.race([
+                embeddingService.generateEmbedding(chunk.text),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Embedding generation timeout')), 5000))
+              ]);
+              
+              // Store in Pinecone with timeout (5 seconds)
+              await Promise.race([
+                index.upsert([{
+                  id: vectorId,
+                  values: embedding,
+                  metadata: {
+                    documentId: documentId,
+                    sectionId: section.sectionNumber,
+                    sectionTitle: section.title,
+                    chunkIndex: i,
+                    content: chunk.text,
+                    wordCount: chunk.text.split(/\s+/).length
+                  }
+                }]),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Pinecone upsert timeout')), 5000))
+              ]);
+            } catch (embeddingError) {
+              console.warn(`⚠️ Failed to process embedding for chunk ${i}:`, embeddingError.message);
+              // Continue processing other chunks
             }
-          }]);
+          }
         }
         
         // Save section to database
