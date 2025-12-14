@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { documentAPI } from '../services/api';
 import { 
   BookOpen, 
@@ -14,13 +14,37 @@ import {
 } from 'lucide-react';
 
 const Dashboard = () => {
+  const location = useLocation();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchDocuments();
-  }, []);
+    
+    // Set up auto-refresh if document was just added
+    if (location.state?.documentAdded) {
+      console.log('📄 Document was added, setting up auto-refresh...');
+      
+      // Poll for updates for 1 minute to catch processing completion
+      let pollCount = 0;
+      const maxPolls = 30; // 30 polls = 1 minute (every 2 seconds)
+      
+      const pollInterval = setInterval(() => {
+        pollCount++;
+        console.log(`🔄 Auto-refreshing documents (${pollCount}/${maxPolls})...`);
+        fetchDocuments();
+        
+        if (pollCount >= maxPolls) {
+          console.log('✅ Auto-refresh stopped');
+          clearInterval(pollInterval);
+        }
+      }, 2000); // Poll every 2 seconds
+      
+      // Clear interval on unmount
+      return () => clearInterval(pollInterval);
+    }
+  }, [location.state]);
 
   const fetchDocuments = async () => {
     try {

@@ -9,6 +9,8 @@ const DocumentUploadSimple = () => {
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [processingComplete, setProcessingComplete] = useState(false);
   const [error, setError] = useState(null);
   
   console.log('DocumentUploadSimple: About to render JSX...', 'Files count:', files.length);
@@ -33,6 +35,60 @@ const DocumentUploadSimple = () => {
       console.error('Error in handleFileSelect (Simple):', error);
       setFiles([]);
     }
+  };
+
+  const pollProcessingStatus = async (docId) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 60 attempts = 2 minutes max
+    
+    const checkStatus = async () => {
+      try {
+        const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+        const response = await fetch(`${API_BASE_URL}/documents/${docId}`);
+        
+        if (response.ok) {
+          const doc = await response.json();
+          console.log('Document status:', doc.processed);
+          
+          if (doc.document?.processed || doc.processed) {
+            // Processing complete!
+            console.log('✅ Document processing complete!');
+            setProcessing(false);
+            setProcessingComplete(true);
+            
+            // Redirect to dashboard after showing success
+            setTimeout(() => {
+              navigate('/', { state: { documentAdded: true } });
+            }, 1500);
+            return;
+          }
+        }
+        
+        // Continue polling if not complete and haven't exceeded max attempts
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 2000); // Check every 2 seconds
+        } else {
+          // Timeout - just redirect anyway
+          console.log('⚠️ Processing timeout, redirecting...');
+          setProcessing(false);
+          navigate('/', { state: { documentAdded: true } });
+        }
+      } catch (error) {
+        console.error('Error checking processing status:', error);
+        // Continue polling despite errors
+        attempts++;
+        if (attempts < maxAttempts) {
+          setTimeout(checkStatus, 2000);
+        } else {
+          setProcessing(false);
+          navigate('/', { state: { documentAdded: true } });
+        }
+      }
+    };
+    
+    // Start checking after 3 seconds (give server time to start processing)
+    setTimeout(checkStatus, 3000);
   };
 
   const handleUpload = async () => {
@@ -60,10 +116,18 @@ const DocumentUploadSimple = () => {
       console.log('Upload successful:', result);
       setUploadComplete(true);
       
-      // Redirect to dashboard after 2 seconds
-      setTimeout(() => {
-        navigate('/');
-      }, 2000);
+      // If we got a document ID or processing info, track it
+      if (result.documentId || result.processingId) {
+        setProcessing(true);
+        
+        // Start polling for processing status
+        pollProcessingStatus(result.documentId);
+      } else {
+        // No processing tracking available, redirect after short delay
+        setTimeout(() => {
+          navigate('/');
+        }, 2000);
+      }
       
     } catch (error) {
       console.error('Upload error:', error);
@@ -143,8 +207,39 @@ const DocumentUploadSimple = () => {
           </div>
         )}
 
-        {/* Success Message */}
-        {uploadComplete && (
+        {/* Processing Status */}
+        {processing && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="animate-spin h-5 w-5 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <div>
+                <p className="text-blue-800 font-medium">Processing your document...</p>
+                <p className="text-blue-600 text-sm mt-1">This may take a minute. Please wait...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Processing Complete */}
+        {processingComplete && (
+          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="text-green-800 font-medium">✅ Processing complete!</p>
+                <p className="text-green-600 text-sm">Redirecting to dashboard...</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Upload Success (fallback) */}
+        {uploadComplete && !processing && !processingComplete && (
           <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center">
               <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">

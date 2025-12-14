@@ -102,9 +102,43 @@ router.post('/upload', (req, res) => {
     // Generate processing ID for tracking
     const processingId = `proc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    // Respond immediately with upload success
+    // Create document record FIRST so we have an ID to return
+    let documentId = null;
+    try {
+      const client = await pool.connect();
+      try {
+        const docResult = await client.query(`
+          INSERT INTO documents (filename, original_name, file_type, file_size, processed, total_chunks, content_preview, metadata)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+          RETURNING id
+        `, [
+          filename,
+          originalname,
+          fileType,
+          req.file.size,
+          false, // Not processed yet
+          0, // No chunks yet
+          'Processing document...',
+          JSON.stringify({ 
+            file_path: filePath,
+            processing_id: processingId,
+            upload_date: new Date().toISOString()
+          })
+        ]);
+        documentId = docResult.rows[0].id;
+        console.log(`✅ Document record created with ID: ${documentId}`);
+      } finally {
+        client.release();
+      }
+    } catch (dbError) {
+      console.error('❌ Failed to create document record:', dbError);
+      // Continue anyway - processing will handle it
+    }
+    
+    // Respond immediately with upload success AND document ID
     res.json({
       success: true,
+      documentId: documentId,
       processingId: processingId,
       message: 'Document uploaded successfully. Processing started...',
       filename: originalname,
@@ -118,18 +152,18 @@ router.post('/upload', (req, res) => {
       ]
     });
 
-    // Start ROBUST document processing
-    processDocumentRobustly(filePath, originalname, fileType, processingId);
+    // Start ROBUST document processing (now updates the existing record)
+    processDocumentRobustly(filePath, originalname, fileType, processingId, documentId);
   });
 });
 
 // ROBUST DOCUMENT PROCESSING FUNCTION
-async function processDocumentRobustly(filePath, originalName, fileType, processingId) {
-  let documentId = null;
+async function processDocumentRobustly(filePath, originalName, fileType, processingId, existingDocumentId = null) {
+  let documentId = existingDocumentId;
   let client = null;
   
   try {
-    console.log(`🚀 ROBUST PROCESSING: ${originalName}`);
+    console.log(`🚀 ROBUST PROCESSING: ${originalName} (Document ID: ${documentId})`);
     
     // Step 1: Verify file exists and is readable
     if (!await fs.pathExists(filePath)) {
@@ -181,30 +215,51 @@ async function processDocumentRobustly(filePath, originalName, fileType, process
       sections = createManualSections(content, originalName, fileType);
     }
     
-    // Step 5: Save document metadata to database
+    // Step 5: Save or update document metadata to database
     console.log('💾 Saving document metadata...');
     client = await pool.connect();
     
-    const docResult = await client.query(`
-      INSERT INTO documents (filename, original_name, file_type, file_size, processed, total_chunks, content_preview, metadata)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id
-    `, [
-      path.basename(filePath), 
-      originalName, 
-      fileType, 
-      fileStats.size, 
-      false, 
-      sections.length, 
-      content.substring(0, 500),
-      JSON.stringify({ 
-        file_path: filePath, 
-        extraction_method: extractionMethod 
-      })
-    ]);
-    
-    documentId = docResult.rows[0].id;
-    console.log(`✅ Document saved with ID: ${documentId}`);
+    if (documentId) {
+      // Update existing document record
+      await client.query(`
+        UPDATE documents 
+        SET total_chunks = $1, content_preview = $2, metadata = $3
+        WHERE id = $4
+      `, [
+        sections.length,
+        content.substring(0, 500),
+        JSON.stringify({ 
+          file_path: filePath, 
+          extraction_method: extractionMethod,
+          processing_id: processingId
+        }),
+        documentId
+      ]);
+      console.log(`✅ Document ${documentId} metadata updated`);
+    } else {
+      // Create new document record (fallback if ID wasn't provided)
+      const docResult = await client.query(`
+        INSERT INTO documents (filename, original_name, file_type, file_size, processed, total_chunks, content_preview, metadata)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING id
+      `, [
+        path.basename(filePath), 
+        originalName, 
+        fileType, 
+        fileStats.size, 
+        false, 
+        sections.length, 
+        content.substring(0, 500),
+        JSON.stringify({ 
+          file_path: filePath, 
+          extraction_method: extractionMethod,
+          processing_id: processingId
+        })
+      ]);
+      
+      documentId = docResult.rows[0].id;
+      console.log(`✅ Document saved with ID: ${documentId}`);
+    }
     
     // Step 6: Process sections with embeddings
     console.log('🧠 Processing sections with embeddings...');
