@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const AutomatedTester = () => {
@@ -284,7 +284,7 @@ const AutomatedTester = () => {
   };
 
   // Generate test summary
-  const generateSummary = () => {
+  const generateSummary = useCallback(() => {
     const summary = testResults.reduce((acc, result) => {
       const category = result.category;
       if (!acc[category]) {
@@ -300,7 +300,7 @@ const AutomatedTester = () => {
     }, {});
     
     setTestSummary(summary);
-  };
+  }, [testResults]);
 
   // Export to CSV (Excel-compatible)
   const exportToCSV = () => {
@@ -354,7 +354,7 @@ const AutomatedTester = () => {
     if (testResults.length > 0) {
       generateSummary();
     }
-  }, [testResults]);
+  }, [testResults, generateSummary]);
 
   return (
     <div style={{ 

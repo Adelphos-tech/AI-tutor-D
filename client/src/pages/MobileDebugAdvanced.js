@@ -71,16 +71,6 @@ const MobileDebugAdvanced = () => {
     }
   };
 
-  const testComponent = (componentName) => {
-    try {
-      console.log(`Testing component: ${componentName}`);
-      // This will help us see if components are loading
-      return { status: 'loaded', timestamp: new Date().toISOString() };
-    } catch (error) {
-      console.error(`Component test failed for ${componentName}:`, error);
-      return { status: 'error', error: error.message, timestamp: new Date().toISOString() };
-    }
-  };
 
   return (
     <div style={{ 
