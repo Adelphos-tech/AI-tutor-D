@@ -28,6 +28,7 @@ class NaturalVoiceClient {
     this.isPlaying = false;
     this.interimTimeout = null;
     this.lastProcessedTranscript = null;
+    this.lastProcessedTime = null; // Track when last message was processed
     this.greetingSent = false; // Track if greeting has been sent
     this.isProcessing = false; // Prevent duplicate processing
     
@@ -188,24 +189,40 @@ class NaturalVoiceClient {
 
       // Process final transcripts for conversation
       if (isFinal && transcript.trim().length > 2) {
-        console.log('🎯 Processing final transcript:', transcript);
+        const trimmedTranscript = transcript.trim();
+        console.log('🎯 Processing final transcript:', trimmedTranscript);
+        
         // Clear any pending interim timeout since we got a final transcript
         clearTimeout(this.interimTimeout);
+        this.interimTimeout = null;
+        
+        // Check if this is a duplicate of what we just processed
+        if (this.lastProcessedTranscript === trimmedTranscript) {
+          console.log('⏭️ Skipping duplicate final transcript');
+          return;
+        }
+        
         // Small delay to ensure audio interruption is complete
         setTimeout(() => {
-          this.lastProcessedTranscript = transcript.trim();
-          this.processUserMessage(transcript.trim());
+          this.lastProcessedTranscript = trimmedTranscript;
+          this.processUserMessage(trimmedTranscript);
         }, 100);
       } else if (!isFinal && transcript.trim().length > 5) {
         // For Chinese, also process longer interim transcripts after a delay
         // This helps when endpointing doesn't work perfectly
+        const trimmedTranscript = transcript.trim();
+        
+        // Clear previous interim timeout
         clearTimeout(this.interimTimeout);
+        
         this.interimTimeout = setTimeout(() => {
-          // Only process if we haven't received a final transcript
-          if (transcript.trim().length > 5 && !this.lastProcessedTranscript) {
-            console.log('🎯 Processing interim transcript (Chinese fallback):', transcript);
-            this.lastProcessedTranscript = transcript.trim();
-            this.processUserMessage(transcript.trim());
+          // Only process if we haven't received a final transcript AND not already processing
+          if (!this.lastProcessedTranscript && !this.isProcessing && trimmedTranscript.length > 5) {
+            console.log('🎯 Processing interim transcript (Chinese fallback):', trimmedTranscript);
+            this.lastProcessedTranscript = trimmedTranscript;
+            this.processUserMessage(trimmedTranscript);
+          } else {
+            console.log('⏭️ Skipping interim - already processed or processing');
           }
         }, 2000); // Wait 2 seconds of silence
       }
@@ -213,15 +230,27 @@ class NaturalVoiceClient {
   }
 
   async processUserMessage(message) {
+    const trimmedMessage = message.trim();
+    
     // Prevent duplicate processing of the same message
     if (this.isProcessing) {
       console.log('⏭️ Already processing a message, skipping duplicate');
       return;
     }
     
+    // Check if this exact message was just processed (within last 3 seconds)
+    if (this.lastProcessedTranscript === trimmedMessage) {
+      const now = Date.now();
+      if (this.lastProcessedTime && (now - this.lastProcessedTime < 3000)) {
+        console.log('⏭️ Skipping duplicate message (processed recently):', trimmedMessage);
+        return;
+      }
+    }
+    
     try {
       this.isProcessing = true;
-      console.log('🤖 Processing user message:', message);
+      this.lastProcessedTime = Date.now();
+      console.log('🤖 Processing user message:', trimmedMessage);
       console.log('🌍 Using language code:', this.languageCode);
       this.onStatusChange?.('processing');
 
@@ -231,7 +260,7 @@ class NaturalVoiceClient {
       // Add to conversation history
       this.conversationHistory.push({
         role: 'user',
-        content: message,
+        content: trimmedMessage,
         timestamp: new Date().toISOString()
       });
 
@@ -242,7 +271,7 @@ class NaturalVoiceClient {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: message,
+          message: trimmedMessage,
           conversationHistory: this.conversationHistory.slice(-6), // Last 6 messages for context
           language: this.languageCode
         }),
