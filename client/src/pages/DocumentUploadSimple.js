@@ -8,7 +8,7 @@ const DocumentUploadSimple = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   
-  console.log('DocumentUploadSimple: About to render JSX...');
+  console.log('DocumentUploadSimple: About to render JSX...', 'Files count:', files.length);
   
   const handleFileSelect = (event) => {
     console.log('handleFileSelect called in DocumentUploadSimple', event);
@@ -21,6 +21,7 @@ const DocumentUploadSimple = () => {
     
     try {
       const selectedFiles = Array.from(event.target.files);
+      console.log('About to setFiles with:', selectedFiles.length, selectedFiles);
       setFiles(selectedFiles);
       console.log('Files selected:', selectedFiles.length, selectedFiles);
     } catch (error) {
@@ -59,16 +60,27 @@ const DocumentUploadSimple = () => {
         
         {files.length > 0 && (
           <div className="mt-6">
-            <h3 className="font-medium text-gray-900 mb-3">Selected Files:</h3>
+            <h3 className="font-medium text-gray-900 mb-3">Selected Files: ({files.length})</h3>
             <ul className="space-y-2">
-              {files.map((file, index) => (
-                <li key={index} className="text-sm text-gray-600">
-                  {file.name} ({Math.round(file.size / 1024)} KB)
-                </li>
-              ))}
+              {files.map((file, index) => {
+                console.log('Rendering file:', index, file.name, file.size);
+                return (
+                  <li key={index} className="text-sm text-gray-600">
+                    {file.name} ({Math.round(file.size / 1024)} KB)
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}
+        
+        {/* Debug info */}
+        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
+          <strong>Debug:</strong> Files array length: {files.length}
+          {files.length > 0 && (
+            <div>Files: {files.map(f => f.name).join(', ')}</div>
+          )}
+        </div>
       </div>
     </div>
   );
