@@ -1,0 +1,63 @@
+
+AI TUTOR PRODUCTION DEPLOYMENT - TEST REPORT
+============================================
+Target: https://ai-tutor-d-production.up.railway.app
+Generated: 2025-12-14T09:16:14.767Z
+Total Tests: 200
+
+OVERALL SUMMARY:
+- Passed: 150 (75.0%)
+- Failed: 50 (25.0%)
+- Errors: 0 (0.0%)
+
+SUITE BREAKDOWN:
+
+ACCESSIBILITY:
+  - Total: 50
+  - Passed: 40 (80.0%)
+  - Failed: 10 (20.0%)
+  - Errors: 0 (0.0%)
+  - Avg Response Time: 391ms
+PAGES:
+  - Total: 50
+  - Passed: 10 (20.0%)
+  - Failed: 40 (80.0%)
+  - Errors: 0 (0.0%)
+  - Avg Response Time: 272ms
+API:
+  - Total: 30
+  - Passed: 30 (100.0%)
+  - Failed: 0 (0.0%)
+  - Errors: 0 (0.0%)
+  - Avg Response Time: 265ms
+PERFORMANCE:
+  - Total: 40
+  - Passed: 40 (100.0%)
+  - Failed: 0 (0.0%)
+  - Errors: 0 (0.0%)
+  - Avg Response Time: 277ms
+MOBILE:
+  - Total: 30
+  - Passed: 30 (100.0%)
+  - Failed: 0 (0.0%)
+  - Errors: 0 (0.0%)
+  - Avg Response Time: 343ms
+
+PERFORMANCE METRICS:
+- Average Response Time: 312ms
+- Fastest Response: 241ms
+- Slowest Response: 904ms
+- Success Rate: 75.0%
+
+TOP ISSUES:
+
+- Security Headers Check: 10 failures
+  * Security headers: 0/5 present
+- Upload Page Load: 10 failures
+  * HTTP 200 - Content missing
+- Direct Test Page: 10 failures
+  * HTTP 200 - Content missing
+- Mobile Debug Page: 10 failures
+  * HTTP 200 - Content missing
+- Automated Tester Page: 10 failures
+  * HTTP 200 - Content missing

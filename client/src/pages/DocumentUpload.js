@@ -12,53 +12,92 @@ import {
 } from 'lucide-react';
 
 const DocumentUploadContent = () => {
-  console.log('DocumentUpload component rendering...');
-  console.log('User agent:', navigator.userAgent);
-  console.log('Viewport:', window.innerWidth, 'x', window.innerHeight);
-  console.log('Is mobile:', /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+  console.log('DocumentUploadContent: Starting render...');
   
+  // Simplified mobile detection and logging
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  console.log('DocumentUpload rendering - Mobile:', isMobile);
+  
+  console.log('DocumentUploadContent: Getting navigate...');
   const navigate = useNavigate();
-  const [uploadState, setUploadState] = useState({
-    files: [],
-    uploading: false,
-    progress: {},
-    processingMessages: {},
-    completed: [],
-    errors: []
+  console.log('DocumentUploadContent: Navigate obtained');
+  
+  console.log('DocumentUploadContent: Setting up state...');
+  const [uploadState, setUploadState] = useState(() => {
+    // Initialize state with safe defaults
+    return {
+      files: [],
+      uploading: false,
+      progress: {},
+      processingMessages: {},
+      completed: [],
+      errors: []
+    };
   });
+  console.log('DocumentUploadContent: State initialized');
 
+  console.log('DocumentUploadContent: Setting up onDrop callback...');
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
-    // Handle rejected files
-    if (rejectedFiles.length > 0) {
-      const errors = rejectedFiles.map(file => ({
-        name: file.file.name,
-        error: file.errors[0]?.message || 'File rejected'
-      }));
+    console.log('onDrop called', { acceptedFiles, rejectedFiles });
+    
+    try {
+      // Handle rejected files with null checks
+      if (rejectedFiles && rejectedFiles.length > 0) {
+        const errors = rejectedFiles.map(file => ({
+          name: file?.file?.name || 'Unknown file',
+          error: file?.errors?.[0]?.message || 'File rejected'
+        }));
+        setUploadState(prev => ({
+          ...prev,
+          errors: [...(prev.errors || []), ...errors]
+        }));
+      }
+
+      // Add accepted files with null checks
+      if (acceptedFiles && acceptedFiles.length > 0) {
+        const newFiles = acceptedFiles.map(file => ({
+          file,
+          id: Math.random().toString(36).substr(2, 9),
+          name: file?.name || 'Unknown file',
+          size: file?.size || 0,
+          type: file?.name ? file.name.split('.').pop().toLowerCase() : 'unknown'
+        }));
+
+        setUploadState(prev => ({
+          ...prev,
+          files: [...(prev.files || []), ...newFiles]
+        }));
+      }
+    } catch (error) {
+      console.error('Error in onDrop:', error);
       setUploadState(prev => ({
         ...prev,
-        errors: [...prev.errors, ...errors]
+        errors: [...(prev.errors || []), { name: 'System Error', error: 'Failed to process files' }]
       }));
     }
-
-    // Add accepted files
-    const newFiles = acceptedFiles.map(file => ({
-      file,
-      id: Math.random().toString(36).substr(2, 9),
-      name: file.name,
-      size: file.size,
-      type: file.name.split('.').pop().toLowerCase()
-    }));
-
-    setUploadState(prev => ({
-      ...prev,
-      files: [...prev.files, ...newFiles]
-    }));
   }, []);
+  console.log('DocumentUploadContent: onDrop callback created');
 
   // Simple file input handler for better mobile compatibility
   const handleFileSelect = (event) => {
-    const files = Array.from(event.target.files);
-    onDrop(files);
+    console.log('handleFileSelect called', event);
+    
+    // Add null checks to prevent undefined errors
+    if (!event || !event.target || !event.target.files) {
+      console.warn('handleFileSelect: Invalid event or missing files');
+      return;
+    }
+    
+    try {
+      const files = Array.from(event.target.files);
+      console.log('Files selected:', files.length);
+      
+      if (files.length > 0) {
+        onDrop(files);
+      }
+    } catch (error) {
+      console.error('Error in handleFileSelect:', error);
+    }
   };
 
   const removeFile = (fileId) => {
@@ -230,20 +269,10 @@ const DocumentUploadContent = () => {
     }
   }, []);
 
+  console.log('DocumentUploadContent: About to render JSX...');
+  
   return (
     <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 mobile-optimized mobile-content">
-      {/* Mobile Debug Status */}
-      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-        <div className="flex items-center space-x-2">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <span className="text-sm text-green-800 font-medium">DocumentUpload Component Loaded Successfully</span>
-        </div>
-        <div className="text-xs text-green-700 mt-1">
-          Mobile: {/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ? 'Yes' : 'No'} | 
-          Viewport: {window.innerWidth}x{window.innerHeight} | 
-          Time: {new Date().toLocaleTimeString()}
-        </div>
-      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
         <button

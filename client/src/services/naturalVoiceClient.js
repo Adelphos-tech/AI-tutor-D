@@ -1,4 +1,4 @@
-import { createClient, LiveTranscriptionEvents } from '@deepgram/sdk';
+import { DeepgramClient, LiveTranscriptionEvents } from '@deepgram/sdk';
 
 class NaturalVoiceClient {
   constructor(sessionId, deepgramApiKey, options = {}) {
@@ -15,7 +15,7 @@ class NaturalVoiceClient {
     });
     
     // Initialize Deepgram client
-    this.deepgram = createClient(deepgramApiKey);
+    this.deepgram = new DeepgramClient(deepgramApiKey);
     this.connection = null;
     this.mediaRecorder = null;
     this.audioStream = null;
@@ -78,7 +78,7 @@ class NaturalVoiceClient {
 
       // Create the connection
       console.log('🔗 Creating Deepgram live connection...');
-      this.connection = this.deepgram.listen.live(deepgramConfig);
+      this.connection = this.deepgram.listen.live.v("1").start(deepgramConfig);
       
       if (!this.connection) {
         throw new Error('Failed to create Deepgram connection');
@@ -419,7 +419,11 @@ class NaturalVoiceClient {
     }
 
     if (this.connection) {
-      this.connection.finish();
+      try {
+        this.connection.finish();
+      } catch (error) {
+        console.log('Connection already closed');
+      }
       this.connection = null;
     }
 

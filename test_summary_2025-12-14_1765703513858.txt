@@ -1,0 +1,56 @@
+
+AI TUTOR APPLICATION - AUTOMATED TEST REPORT
+============================================
+Generated: 2025-12-14T09:11:53.858Z
+Total Tests: 160
+
+OVERALL SUMMARY:
+- Passed: 136 (85.0%)
+- Failed: 24 (15.0%)
+- Errors: 0 (0.0%)
+
+SUITE BREAKDOWN:
+
+NAVIGATION:
+  - Total: 50
+  - Passed: 42 (84.0%)
+  - Failed: 8 (16.0%)
+  - Errors: 0 (0.0%)
+  - Avg Duration: 1023ms
+FUNCTIONALITY:
+  - Total: 50
+  - Passed: 46 (92.0%)
+  - Failed: 4 (8.0%)
+  - Errors: 0 (0.0%)
+  - Avg Duration: 472ms
+PERFORMANCE:
+  - Total: 30
+  - Passed: 20 (66.7%)
+  - Failed: 10 (33.3%)
+  - Errors: 0 (0.0%)
+  - Avg Duration: 734ms
+MOBILE:
+  - Total: 30
+  - Passed: 28 (93.3%)
+  - Failed: 2 (6.7%)
+  - Errors: 0 (0.0%)
+  - Avg Duration: 0ms
+
+TOP ISSUES:
+
+- Page Load Time Test: 5 failures
+  * Page load time: 3228ms (Slow)
+  * Page load time: 2435ms (Slow)
+  * Page load time: 2750ms (Slow)
+  * Page load time: 2406ms (Slow)
+  * Page load time: 3033ms (Slow)
+- Navigate to Upload: 3 failures
+  * Missing expected elements on /upload
+- Navigate to Direct Test: 3 failures
+  * Missing expected elements on /direct-test
+- Network Requests Test: 3 failures
+  * Network requests: 20 (Too many)
+  * Network requests: 17 (Too many)
+  * Network requests: 18 (Too many)
+- Mobile Detection Test: 2 failures
+  * Mobile detection failed

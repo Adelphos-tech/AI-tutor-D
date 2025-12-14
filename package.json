@@ -11,7 +11,13 @@
     "start": "node server.js",
     "start:production": "npm run build && node server.js",
     "install-all": "npm install && cd client && npm install",
-    "postinstall": "cd client && npm install"
+    "postinstall": "cd client && npm install",
+    "test:automated": "node test-automation.js",
+    "test:automated:full": "node test-automation.js 10",
+    "test:automated:quick": "node test-automation.js 3",
+    "test:production": "node production-test-automation.js",
+    "test:production:full": "node production-test-automation.js 10",
+    "test:production:quick": "node production-test-automation.js 3"
   },
   "dependencies": {
     "express": "^4.18.2",
