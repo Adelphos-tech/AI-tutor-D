@@ -59,7 +59,7 @@ const DocumentUploadSimple = () => {
             
             // Redirect to dashboard after showing success
             setTimeout(() => {
-              navigate('/', { state: { documentAdded: true } });
+              navigate('/');
             }, 1500);
             return;
           }
@@ -73,7 +73,7 @@ const DocumentUploadSimple = () => {
           // Timeout - just redirect anyway
           console.log('⚠️ Processing timeout, redirecting...');
           setProcessing(false);
-          navigate('/', { state: { documentAdded: true } });
+          navigate('/');
         }
       } catch (error) {
         console.error('Error checking processing status:', error);
@@ -83,7 +83,7 @@ const DocumentUploadSimple = () => {
           setTimeout(checkStatus, 2000);
         } else {
           setProcessing(false);
-          navigate('/', { state: { documentAdded: true } });
+          navigate('/');
         }
       }
     };

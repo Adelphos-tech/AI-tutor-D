@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { documentAPI } from '../services/api';
 import { 
   BookOpen, 
@@ -10,68 +10,39 @@ import {
   AlertCircle,
   Trash2,
   MessageCircle,
-  Mic
+  Mic,
+  RefreshCw
 } from 'lucide-react';
 
 const Dashboard = () => {
-  const location = useLocation();
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchDocuments();
-    
-    // Set up auto-refresh if document was just added
-    if (location.state?.documentAdded) {
-      console.log('📄 Document was added, setting up auto-refresh...');
-      
-      // Clear the navigation state to prevent re-triggering
-      window.history.replaceState({}, document.title);
-      
-      // Poll for updates for 1 minute to catch processing completion
-      let pollCount = 0;
-      const maxPolls = 15; // 15 polls = 30 seconds (every 2 seconds)
-      
-      const pollInterval = setInterval(async () => {
-        pollCount++;
-        console.log(`🔄 Auto-refreshing documents (${pollCount}/${maxPolls})...`);
-        const hasProcessing = await fetchDocuments(true);
-        
-        // Stop polling if all documents are processed OR max polls reached
-        if (!hasProcessing) {
-          console.log('✅ Auto-refresh stopped - all documents processed');
-          clearInterval(pollInterval);
-        } else if (pollCount >= maxPolls) {
-          console.log('✅ Auto-refresh stopped - maximum time reached');
-          clearInterval(pollInterval);
-        }
-      }, 2000); // Poll every 2 seconds
-      
-      // Clear interval on unmount
-      return () => clearInterval(pollInterval);
-    }
   }, []);
 
-  const fetchDocuments = async (checkProcessing = false) => {
+  const fetchDocuments = async () => {
     try {
       setLoading(true);
+      setRefreshing(true);
       const response = await documentAPI.getDocuments();
       const docs = response.documents || [];
       setDocuments(docs);
-      
-      // Return whether there are any documents still processing
-      if (checkProcessing) {
-        const hasProcessing = docs.some(doc => !doc.processed);
-        return hasProcessing;
-      }
     } catch (err) {
       setError('Failed to fetch documents');
       console.error('Error fetching documents:', err);
-      return false;
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    console.log('🔄 Manual refresh triggered');
+    await fetchDocuments();
   };
 
   const handleDeleteDocument = async (documentId) => {
@@ -139,13 +110,24 @@ const Dashboard = () => {
             Manage your documents and start learning sessions
           </p>
         </div>
-        <Link
-          to="/upload"
-          className="mobile-button btn btn-primary w-full sm:w-auto px-6 py-3 sm:btn-lg"
-        >
-          <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-          Upload Document
-        </Link>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex-1 sm:flex-none mobile-button btn btn-secondary px-4 py-3 sm:btn-lg disabled:opacity-50"
+            title="Refresh document list"
+          >
+            <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <Link
+            to="/upload"
+            className="flex-1 sm:flex-none mobile-button btn btn-primary px-6 py-3 sm:btn-lg"
+          >
+            <Upload className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+            Upload Document
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}
