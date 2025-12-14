@@ -355,7 +355,6 @@ const DocumentUploadSimple = () => {
                     ></div>
                   </div>
                 </div>
-                <p className="text-blue-500 text-xs mt-2">⏱️ Average processing time: 30-60 seconds</p>
               </div>
             </div>
           </div>
@@ -399,14 +398,6 @@ const DocumentUploadSimple = () => {
             </div>
           </div>
         )}
-        
-        {/* Debug info */}
-        <div className="mt-4 p-2 bg-gray-100 rounded text-xs">
-          <strong>Debug:</strong> Files array length: {files.length}
-          {files.length > 0 && (
-            <div>Files: {files.map(f => f.name).join(', ')}</div>
-          )}
-        </div>
       </div>
     </div>
   );
