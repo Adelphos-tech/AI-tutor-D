@@ -8,6 +8,7 @@ const DocumentUploadSimple = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadComplete, setUploadComplete] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
@@ -95,6 +96,7 @@ const DocumentUploadSimple = () => {
     if (files.length === 0) return;
     
     setUploading(true);
+    setUploadProgress(0);
     setError(null);
     console.log('Starting upload...');
     
@@ -103,9 +105,37 @@ const DocumentUploadSimple = () => {
       formData.append('document', files[0]);
       
       const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
-      const response = await fetch(`${API_BASE_URL}/documents/upload`, {
-        method: 'POST',
-        body: formData,
+      
+      // Use XMLHttpRequest to track upload progress
+      const response = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        
+        // Track upload progress
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = Math.round((e.loaded / e.total) * 100);
+            setUploadProgress(percentComplete);
+            console.log(`Upload progress: ${percentComplete}%`);
+          }
+        });
+        
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({
+              ok: true,
+              json: () => Promise.resolve(JSON.parse(xhr.responseText))
+            });
+          } else {
+            reject(new Error(`Upload failed: ${xhr.statusText}`));
+          }
+        });
+        
+        xhr.addEventListener('error', () => {
+          reject(new Error('Network error during upload'));
+        });
+        
+        xhr.open('POST', `${API_BASE_URL}/documents/upload`);
+        xhr.send(formData);
       });
       
       if (!response.ok) {
@@ -195,7 +225,7 @@ const DocumentUploadSimple = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Uploading...
+                  Uploading... {uploadProgress}%
                 </span>
               ) : (
                 <span className="flex items-center justify-center">
@@ -204,6 +234,26 @@ const DocumentUploadSimple = () => {
                 </span>
               )}
             </button>
+            
+            {/* Upload Progress Bar */}
+            {uploading && (
+              <div className="mt-3">
+                <div className="flex justify-between text-sm text-gray-600 mb-1">
+                  <span>Uploading file...</span>
+                  <span className="font-medium">{uploadProgress}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className="bg-blue-600 h-full transition-all duration-300 ease-out flex items-center justify-end pr-2"
+                    style={{ width: `${uploadProgress}%` }}
+                  >
+                    {uploadProgress > 10 && (
+                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
