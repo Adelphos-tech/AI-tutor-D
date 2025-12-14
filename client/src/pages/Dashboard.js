@@ -46,16 +46,24 @@ const Dashboard = () => {
   };
 
   const handleDeleteDocument = async (documentId) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) {
+    const document = documents.find(doc => doc.id === documentId);
+    
+    let confirmMessage = 'Are you sure you want to delete this document?';
+    if (document && !document.processed) {
+      confirmMessage = '⚠️ This document is still processing. Are you sure you want to delete it?\n\nDeleting a processing document will cancel the upload and remove all data.';
+    }
+    
+    if (!window.confirm(confirmMessage)) {
       return;
     }
 
     try {
       await documentAPI.deleteDocument(documentId);
       setDocuments(documents.filter(doc => doc.id !== documentId));
+      console.log(`✅ Document ${documentId} deleted successfully`);
     } catch (err) {
       console.error('Error deleting document:', err);
-      alert('Failed to delete document');
+      alert('Failed to delete document. Please try again.');
     }
   };
 
@@ -252,8 +260,8 @@ const Dashboard = () => {
                     )}
 
                     {/* Action Buttons */}
-                    {document.processed && (
-                      <div className="flex space-x-2">
+                    <div className="flex space-x-2">
+                      {document.processed && (
                         <Link
                           to={`/document/${document.id}`}
                           className="btn btn-sm btn-outline"
@@ -261,15 +269,15 @@ const Dashboard = () => {
                         >
                           <BookOpen className="h-4 w-4" />
                         </Link>
-                        <button
-                          onClick={() => handleDeleteDocument(document.id)}
-                          className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
-                          title="Delete Document"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
+                      )}
+                      <button
+                        onClick={() => handleDeleteDocument(document.id)}
+                        className="btn btn-sm btn-ghost text-red-600 hover:bg-red-50"
+                        title={document.processed ? "Delete Document" : "Delete Processing Document"}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
