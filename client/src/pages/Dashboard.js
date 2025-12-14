@@ -26,17 +26,24 @@ const Dashboard = () => {
     if (location.state?.documentAdded) {
       console.log('📄 Document was added, setting up auto-refresh...');
       
+      // Clear the navigation state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+      
       // Poll for updates for 1 minute to catch processing completion
       let pollCount = 0;
-      const maxPolls = 30; // 30 polls = 1 minute (every 2 seconds)
+      const maxPolls = 15; // 15 polls = 30 seconds (every 2 seconds)
       
-      const pollInterval = setInterval(() => {
+      const pollInterval = setInterval(async () => {
         pollCount++;
         console.log(`🔄 Auto-refreshing documents (${pollCount}/${maxPolls})...`);
-        fetchDocuments();
+        const hasProcessing = await fetchDocuments(true);
         
-        if (pollCount >= maxPolls) {
-          console.log('✅ Auto-refresh stopped');
+        // Stop polling if all documents are processed OR max polls reached
+        if (!hasProcessing) {
+          console.log('✅ Auto-refresh stopped - all documents processed');
+          clearInterval(pollInterval);
+        } else if (pollCount >= maxPolls) {
+          console.log('✅ Auto-refresh stopped - maximum time reached');
           clearInterval(pollInterval);
         }
       }, 2000); // Poll every 2 seconds
@@ -44,16 +51,24 @@ const Dashboard = () => {
       // Clear interval on unmount
       return () => clearInterval(pollInterval);
     }
-  }, [location.state]);
+  }, []);
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (checkProcessing = false) => {
     try {
       setLoading(true);
       const response = await documentAPI.getDocuments();
-      setDocuments(response.documents || []);
+      const docs = response.documents || [];
+      setDocuments(docs);
+      
+      // Return whether there are any documents still processing
+      if (checkProcessing) {
+        const hasProcessing = docs.some(doc => !doc.processed);
+        return hasProcessing;
+      }
     } catch (err) {
       setError('Failed to fetch documents');
       console.error('Error fetching documents:', err);
+      return false;
     } finally {
       setLoading(false);
     }
