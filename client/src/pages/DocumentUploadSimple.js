@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload, Clock } from 'lucide-react';
 
 const DocumentUploadSimple = () => {
   console.log('DocumentUploadSimple: Starting render...');
@@ -12,9 +12,27 @@ const DocumentUploadSimple = () => {
   const [uploadComplete, setUploadComplete] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [processingComplete, setProcessingComplete] = useState(false);
+  const [processingStartTime, setProcessingStartTime] = useState(null);
+  const [processingElapsed, setProcessingElapsed] = useState(0);
+  const [processingStage, setProcessingStage] = useState('');
+  const [processingProgress, setProcessingProgress] = useState(0);
   const [error, setError] = useState(null);
   
   console.log('DocumentUploadSimple: About to render JSX...', 'Files count:', files.length);
+  
+  // Processing timer effect
+  useEffect(() => {
+    let interval;
+    if (processing && processingStartTime) {
+      interval = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - processingStartTime) / 1000);
+        setProcessingElapsed(elapsed);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [processing, processingStartTime]);
   
   const handleFileSelect = (event) => {
     console.log('handleFileSelect called in DocumentUploadSimple', event);
@@ -38,9 +56,49 @@ const DocumentUploadSimple = () => {
     }
   };
 
+  // Format elapsed time
+  const formatElapsedTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${String(secs).padStart(2, '0')}`;
+  };
+  
+  // Calculate estimated progress percentage
+  const getProgressPercentage = (attemptNum, maxAttempts) => {
+    // Estimate progress based on polling attempts
+    // First 5 attempts = 0-40% (content extraction)
+    // Next 5 attempts = 40-70% (embeddings)
+    // Next 5 attempts = 70-90% (database)
+    // Final attempts = 90-95% (finalizing)
+    if (attemptNum <= 5) {
+      return Math.min(40, attemptNum * 8);
+    } else if (attemptNum <= 10) {
+      return 40 + ((attemptNum - 5) * 6);
+    } else if (attemptNum <= 15) {
+      return 70 + ((attemptNum - 10) * 4);
+    } else {
+      return Math.min(95, 90 + ((attemptNum - 15) * 0.5));
+    }
+  };
+
   const pollProcessingStatus = async (docId) => {
     let attempts = 0;
     const maxAttempts = 60; // 60 attempts = 2 minutes max
+    
+    // Set processing stages based on time
+    const updateProcessingStage = (attemptNum) => {
+      if (attemptNum <= 2) {
+        setProcessingStage('📄 Extracting content from document...');
+      } else if (attemptNum <= 5) {
+        setProcessingStage('📊 Analyzing document structure...');
+      } else if (attemptNum <= 10) {
+        setProcessingStage('🧠 Generating AI embeddings...');
+      } else if (attemptNum <= 15) {
+        setProcessingStage('💾 Saving to database...');
+      } else {
+        setProcessingStage('✨ Finalizing processing...');
+      }
+    };
     
     const checkStatus = async () => {
       try {
@@ -67,6 +125,8 @@ const DocumentUploadSimple = () => {
         
         // Continue polling if not complete and haven't exceeded max attempts
         attempts++;
+        updateProcessingStage(attempts);
+        setProcessingProgress(getProgressPercentage(attempts, maxAttempts));
         if (attempts < maxAttempts) {
           setTimeout(checkStatus, 2000); // Check every 2 seconds
         } else {
@@ -149,6 +209,10 @@ const DocumentUploadSimple = () => {
       // If we got a document ID or processing info, track it
       if (result.documentId || result.processingId) {
         setProcessing(true);
+        setProcessingStartTime(Date.now());
+        setProcessingElapsed(0);
+        setProcessingStage('📄 Extracting content from document...');
+        setProcessingProgress(0);
         
         // Start polling for processing status
         pollProcessingStatus(result.documentId);
@@ -260,14 +324,38 @@ const DocumentUploadSimple = () => {
         {/* Processing Status */}
         {processing && (
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center">
-              <svg className="animate-spin h-5 w-5 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div className="flex items-start">
+              <svg className="animate-spin h-5 w-5 text-blue-600 mr-3 mt-1 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <div>
-                <p className="text-blue-800 font-medium">Processing your document...</p>
-                <p className="text-blue-600 text-sm mt-1">This may take a minute. Please wait...</p>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-blue-800 font-medium">Processing your document...</p>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                      <span className="text-sm font-medium">{processingProgress}%</span>
+                    </div>
+                    <div className="flex items-center text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
+                      <Clock className="h-4 w-4 mr-1" />
+                      <span className="text-sm font-medium">{formatElapsedTime(processingElapsed)}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-blue-600 text-sm mt-2">{processingStage}</p>
+                <div className="mt-3">
+                  <div className="flex justify-between text-xs text-blue-600 mb-1">
+                    <span>Progress</span>
+                    <span>{processingProgress}% complete</span>
+                  </div>
+                  <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                      style={{ width: `${processingProgress}%` }}
+                    ></div>
+                  </div>
+                </div>
+                <p className="text-blue-500 text-xs mt-2">⏱️ Average processing time: 30-60 seconds</p>
               </div>
             </div>
           </div>
