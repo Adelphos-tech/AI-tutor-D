@@ -1,6 +1,6 @@
 {
   "name": "ai-tutor-client",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
     "@deepgram/sdk": "^3.4.0",

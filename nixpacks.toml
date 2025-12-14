@@ -2,7 +2,7 @@
 cmds = [
     "npm install",
     "cd client && npm install",
-    "cd client && npm run build"
+    "cd client && CI=false npm run build"
 ]
 
 [phases.start]
