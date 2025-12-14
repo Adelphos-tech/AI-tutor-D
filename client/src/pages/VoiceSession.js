@@ -67,6 +67,12 @@ const VoiceSession = () => {
   }, []);
 
   const initializeNaturalVoiceClient = async () => {
+    // Prevent multiple initializations
+    if (voiceClientRef.current) {
+      console.log('⏭️ Voice client already initialized, skipping');
+      return;
+    }
+    
     try {
       console.log('🎙️ Initializing natural voice conversation...');
       console.log('🌍 Selected language:', selectedLanguage);

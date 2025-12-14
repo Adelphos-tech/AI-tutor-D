@@ -28,6 +28,8 @@ class NaturalVoiceClient {
     this.isPlaying = false;
     this.interimTimeout = null;
     this.lastProcessedTranscript = null;
+    this.greetingSent = false; // Track if greeting has been sent
+    this.isProcessing = false; // Prevent duplicate processing
     
     // Event handlers
     this.onTranscript = null;
@@ -153,10 +155,13 @@ class NaturalVoiceClient {
       this.isListening = true;
       this.onStatusChange?.('listening');
 
-      // Send initial greeting
-      setTimeout(() => {
-        this.sendGreeting();
-      }, 1000);
+      // Send initial greeting only once
+      if (!this.greetingSent) {
+        setTimeout(() => {
+          this.sendGreeting();
+          this.greetingSent = true;
+        }, 1000);
+      }
 
     } catch (error) {
       console.error('❌ Failed to start listening:', error);
@@ -208,7 +213,14 @@ class NaturalVoiceClient {
   }
 
   async processUserMessage(message) {
+    // Prevent duplicate processing of the same message
+    if (this.isProcessing) {
+      console.log('⏭️ Already processing a message, skipping duplicate');
+      return;
+    }
+    
     try {
+      this.isProcessing = true;
       console.log('🤖 Processing user message:', message);
       console.log('🌍 Using language code:', this.languageCode);
       this.onStatusChange?.('processing');
@@ -268,10 +280,11 @@ class NaturalVoiceClient {
       this.onError?.(error);
       this.onStatusChange?.('error');
     } finally {
+      this.isProcessing = false;
       // Reset processed transcript after a delay to allow for new messages
       setTimeout(() => {
         this.lastProcessedTranscript = null;
-      }, 5000);
+      }, 3000); // Reduced from 5s to 3s for better responsiveness
     }
   }
 
@@ -366,6 +379,12 @@ class NaturalVoiceClient {
   }
 
   async sendGreeting() {
+    // Prevent sending multiple greetings
+    if (this.greetingSent) {
+      console.log('⏭️ Greeting already sent, skipping');
+      return;
+    }
+    
     const greeting = "Hello! I'm Dr. Sarah Chen, your AI academic tutor. I'm ready to help you explore and understand the material. What would you like to discuss?";
     this.onResponse?.(greeting);
     
@@ -396,6 +415,10 @@ class NaturalVoiceClient {
     if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
       this.mediaRecorder.stop();
     }
+    
+    // Reset processing state but KEEP greetingSent as true to prevent re-greeting
+    this.isProcessing = false;
+    this.lastProcessedTranscript = null;
     
     // Reconnect after delay
     setTimeout(() => {
@@ -428,6 +451,13 @@ class NaturalVoiceClient {
     }
 
     this.stopCurrentAudio();
+    
+    // Reset all state flags on explicit disconnect
+    this.greetingSent = false;
+    this.isProcessing = false;
+    this.lastProcessedTranscript = null;
+    clearTimeout(this.interimTimeout);
+    
     this.onStatusChange?.('disconnected');
   }
 
