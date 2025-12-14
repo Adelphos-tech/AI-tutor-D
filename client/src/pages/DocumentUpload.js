@@ -103,16 +103,16 @@ const DocumentUploadContent = () => {
   const removeFile = (fileId) => {
     setUploadState(prev => ({
       ...prev,
-      files: prev.files.filter(f => f.id !== fileId)
+      files: (prev.files || []).filter(f => f.id !== fileId)
     }));
   };
 
   const uploadFiles = async () => {
-    if (uploadState.files.length === 0) return;
+    if ((uploadState.files?.length || 0) === 0) return;
 
     setUploadState(prev => ({ ...prev, uploading: true, errors: [] }));
 
-    for (const fileItem of uploadState.files) {
+    for (const fileItem of (uploadState.files || [])) {
       try {
         const response = await documentAPI.uploadDocument(
           fileItem.file,
@@ -225,7 +225,7 @@ const DocumentUploadContent = () => {
     }
   };
 
-  const allUploaded = uploadState.completed.length === uploadState.files.length && uploadState.files.length > 0;
+  const allUploaded = (uploadState.completed?.length || 0) === (uploadState.files?.length || 0) && (uploadState.files?.length || 0) > 0;
 
   // Auto-redirect countdown when upload is complete
   useEffect(() => {
@@ -321,12 +321,12 @@ const DocumentUploadContent = () => {
       </div>
 
       {/* File List */}
-      {uploadState.files.length > 0 && (
+      {(uploadState.files?.length || 0) > 0 && (
         <div className="card">
           <div className="card-header">
             <h2 className="card-title">Selected Files</h2>
             <p className="card-description">
-              {uploadState.files.length} file{uploadState.files.length !== 1 ? 's' : ''} ready for upload
+              {uploadState.files?.length || 0} file{(uploadState.files?.length || 0) !== 1 ? 's' : ''} ready for upload
             </p>
           </div>
           <div className="card-content">
@@ -336,19 +336,19 @@ const DocumentUploadContent = () => {
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-medium text-blue-900">Upload Progress</h3>
                   <span className="text-sm text-blue-700">
-                    {uploadState.completed.length} of {uploadState.files.length} completed
+                    {uploadState.completed?.length || 0} of {uploadState.files?.length || 0} completed
                   </span>
                 </div>
                 <div className="bg-blue-200 rounded-full h-2">
                   <div
                     className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                     style={{ 
-                      width: `${(uploadState.completed.length / uploadState.files.length) * 100}%` 
+                      width: `${((uploadState.completed?.length || 0) / (uploadState.files?.length || 1)) * 100}%` 
                     }}
                   />
                 </div>
                 <p className="text-sm text-blue-700 mt-2">
-                  {uploadState.completed.length === uploadState.files.length 
+                  {(uploadState.completed?.length || 0) === (uploadState.files?.length || 0) 
                     ? 'All files uploaded successfully! Navigate to the Dashboard to start chatting with your documents.' 
                     : 'Uploading and processing your documents...'
                   }
@@ -357,7 +357,7 @@ const DocumentUploadContent = () => {
             )}
 
             <div className="space-y-3">
-              {uploadState.files.map((fileItem) => (
+              {(uploadState.files || []).map((fileItem) => (
                 <div
                   key={fileItem.id}
                   className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
@@ -479,7 +479,7 @@ const DocumentUploadContent = () => {
               </button>
               <button
                 onClick={uploadFiles}
-                disabled={uploadState.uploading || uploadState.files.length === 0}
+                disabled={uploadState.uploading || (uploadState.files?.length || 0) === 0}
                 className="btn btn-primary"
               >
                 {uploadState.uploading ? (
@@ -500,14 +500,14 @@ const DocumentUploadContent = () => {
       )}
 
       {/* Errors */}
-      {uploadState.errors.length > 0 && (
+      {(uploadState.errors?.length || 0) > 0 && (
         <div className="card">
           <div className="card-header">
             <h2 className="card-title text-red-600">Upload Errors</h2>
           </div>
           <div className="card-content">
             <div className="space-y-2">
-              {uploadState.errors.map((error, index) => (
+              {(uploadState.errors || []).map((error, index) => (
                 <div key={index} className="flex items-center space-x-2 text-red-600">
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-sm">
