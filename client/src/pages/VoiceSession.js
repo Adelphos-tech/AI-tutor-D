@@ -33,6 +33,7 @@ const VoiceSession = () => {
   const [aiResponse, setAiResponse] = useState('');
   const [conversationHistory, setConversationHistory] = useState([]);
   const [voiceStatus, setVoiceStatus] = useState('disconnected');
+  const [errorMessage, setErrorMessage] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState(supportedLanguages[0]); // Default to English
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   
@@ -118,6 +119,7 @@ const VoiceSession = () => {
       client.setOnError((error) => {
         console.error('❌ Natural voice error:', error);
         setVoiceStatus('error');
+        setErrorMessage(error || 'Connection error occurred. Please try again.');
       });
       
       // Connect and start natural conversation
@@ -159,13 +161,16 @@ const VoiceSession = () => {
   const startVoiceConversation = async () => {
     try {
       setVoiceStatus('connecting');
+      setErrorMessage('');
       if (voiceClientRef.current) {
         voiceClientRef.current.disconnect();
+        voiceClientRef.current = null;
       }
       await initializeNaturalVoiceClient();
     } catch (error) {
       console.error('Failed to start voice conversation:', error);
       setVoiceStatus('error');
+      setErrorMessage(error.message || 'Failed to start voice conversation. Please try again.');
     }
   };
 
@@ -327,14 +332,28 @@ const VoiceSession = () => {
           {voiceStatus === 'error' && (
             <div className="text-center mt-4">
               <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-red-800 text-sm mb-2">
-                  ❌ Connection failed. Please check your microphone permissions and try again.
+                <p className="text-red-800 text-sm mb-3 font-medium">
+                  ❌ {errorMessage || 'Connection failed. Please check your microphone permissions and try again.'}
                 </p>
+                {errorMessage.includes('API key') ? (
+                  <p className="text-red-700 text-xs mb-3">
+                    This is a configuration issue. Please contact the administrator.
+                  </p>
+                ) : errorMessage.includes('Microphone') ? (
+                  <div className="text-red-700 text-xs mb-3 space-y-2">
+                    <p>To fix microphone access:</p>
+                    <ul className="list-disc list-inside text-left max-w-md mx-auto">
+                      <li>Click the camera/microphone icon in your browser's address bar</li>
+                      <li>Select "Always allow" for microphone access</li>
+                      <li>Refresh the page and try again</li>
+                    </ul>
+                  </div>
+                ) : null}
                 <button
                   onClick={startVoiceConversation}
-                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm transition-colors"
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors font-medium"
                 >
-                  Retry Connection
+                  🔄 Retry Connection
                 </button>
               </div>
             </div>

@@ -41,8 +41,16 @@ class NaturalVoiceClient {
 
   async connect() {
     try {
-      console.log('🎙️ Connecting to Deepgram for natural conversation...');
+      console.log('🎭️ Connecting to Deepgram for natural conversation...');
       this.onStatusChange?.('connecting');
+
+      // Validate API key first
+      if (!this.deepgramApiKey || this.deepgramApiKey === 'undefined' || this.deepgramApiKey === 'null') {
+        console.error('❌ Deepgram API key is missing or invalid');
+        this.onError?.('Configuration error: Deepgram API key is missing. Please contact support.');
+        this.onStatusChange?.('error');
+        return false;
+      }
 
       // Request microphone permission first
       console.log('🎤 Requesting microphone permission...');
