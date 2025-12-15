@@ -82,6 +82,19 @@ const VoiceSession = () => {
       // Use Deepgram API key
       const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
       
+      console.log('🔑 API Key check:', {
+        exists: !!deepgramApiKey,
+        length: deepgramApiKey?.length || 0,
+        firstChars: deepgramApiKey?.substring(0, 8) + '...' || 'undefined'
+      });
+      
+      if (!deepgramApiKey) {
+        console.error('❌ REACT_APP_DEEPGRAM_API_KEY is not set!');
+        setVoiceStatus('error');
+        setErrorMessage('Configuration error: Deepgram API key not found. The environment variable REACT_APP_DEEPGRAM_API_KEY must be set.');
+        return;
+      }
+      
       const voiceOptions = {
         language: selectedLanguage.deepgram,
         languageCode: selectedLanguage.code,
