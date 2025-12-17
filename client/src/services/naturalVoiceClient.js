@@ -104,7 +104,7 @@ class NaturalVoiceClient {
 
       // Create the connection
       console.log('🔗 Creating Deepgram live connection...');
-      this.connection = this.deepgram.listen.live.v("1").start(deepgramConfig);
+      this.connection = this.deepgram.listen.live(deepgramConfig);
       
       if (!this.connection) {
         throw new Error('Failed to create Deepgram connection');
