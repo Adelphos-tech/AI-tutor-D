@@ -1,4 +1,4 @@
-import { DeepgramClient, LiveTranscriptionEvents } from '@deepgram/sdk';
+import { createClient, LiveTranscriptionEvents } from '@deepgram/sdk';
 
 class NaturalVoiceClient {
   constructor(sessionId, deepgramApiKey, options = {}) {
@@ -14,8 +14,23 @@ class NaturalVoiceClient {
       voiceLanguage: this.voiceLanguage
     });
     
+    // Debug API key before Deepgram client initialization
+    console.log('🔑 NaturalVoiceClient API Key Debug:', {
+      apiKey: deepgramApiKey,
+      type: typeof deepgramApiKey,
+      length: deepgramApiKey?.length || 0,
+      isString: typeof deepgramApiKey === 'string',
+      isEmpty: !deepgramApiKey || deepgramApiKey.trim() === ''
+    });
+    
+    // Validate API key first
+    if (!deepgramApiKey || deepgramApiKey === 'undefined' || deepgramApiKey === 'null') {
+      console.error('❌ Deepgram API key is missing or invalid');
+      throw new Error('Configuration error: Deepgram API key is missing. Please contact support.');
+    }
+    
     // Initialize Deepgram client
-    this.deepgram = new DeepgramClient(deepgramApiKey);
+    this.deepgram = createClient(deepgramApiKey);
     this.connection = null;
     this.mediaRecorder = null;
     this.audioStream = null;

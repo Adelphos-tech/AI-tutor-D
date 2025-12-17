@@ -80,7 +80,7 @@ const VoiceSession = () => {
       setVoiceStatus('connecting');
       
       // Use Deepgram API key
-      const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY;
+      const deepgramApiKey = process.env.REACT_APP_DEEPGRAM_API_KEY || 'b25ae131afcc69d579e78effc9aefb1f29d11e56';
       
       console.log('🔑 API Key check:', {
         exists: !!deepgramApiKey,
@@ -94,6 +94,18 @@ const VoiceSession = () => {
         setErrorMessage('Configuration error: Deepgram API key not found. The environment variable REACT_APP_DEEPGRAM_API_KEY must be set.');
         return;
       }
+
+      // Additional validation
+      if (typeof deepgramApiKey !== 'string' || deepgramApiKey.trim() === '') {
+        console.error('❌ Invalid Deepgram API key format:', {
+          type: typeof deepgramApiKey,
+          value: deepgramApiKey,
+          length: deepgramApiKey?.length || 0
+        });
+        setVoiceStatus('error');
+        setErrorMessage('Configuration error: Invalid Deepgram API key format.');
+        return;
+      }
       
       const voiceOptions = {
         language: selectedLanguage.deepgram,
@@ -101,6 +113,13 @@ const VoiceSession = () => {
         voiceLanguage: selectedLanguage.voice
       };
       console.log('🎙️ Voice client options:', voiceOptions);
+      
+      console.log('🔑 About to create NaturalVoiceClient with API key:', {
+        keyExists: !!deepgramApiKey,
+        keyType: typeof deepgramApiKey,
+        keyLength: deepgramApiKey?.length || 0,
+        keyStart: deepgramApiKey?.substring(0, 8) + '...' || 'undefined'
+      });
       
       const client = new NaturalVoiceClient(sessionId, deepgramApiKey, voiceOptions);
       voiceClientRef.current = client;
