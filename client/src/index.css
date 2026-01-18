@@ -87,7 +87,7 @@
   }
   
   .btn-lg {
-    @apply h-13 px-7 text-base;
+    @apply h-12 px-7 text-base;
   }
   
   /* Premium Input Styles */
