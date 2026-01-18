@@ -207,44 +207,41 @@ const ChatSession = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50 mobile-optimized">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 mobile-header">
+    <div className="flex flex-col h-screen bg-surface-100 mobile-optimized">
+      {/* Premium Header */}
+      <div className="bg-white/90 backdrop-blur-md border-b border-surface-200 mobile-header sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0 flex-1">
+          <div className="flex items-center space-x-3 min-w-0 flex-1">
             <button
               onClick={() => navigate(`/document/${session.document_id}`)}
-              className="mobile-button btn btn-ghost btn-sm flex-shrink-0"
+              className="h-9 w-9 rounded-xl bg-surface-100 hover:bg-surface-200 flex items-center justify-center transition-colors flex-shrink-0"
             >
-              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden xs:inline">Back</span>
+              <ArrowLeft className="h-4 w-4 text-primary-700" />
             </button>
             <div className="min-w-0 flex-1">
-              <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+              <h1 className="text-base sm:text-lg font-semibold text-primary-900 truncate">
                 {session.session_name}
               </h1>
-              <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-gray-500">
-                <BookOpen className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+              <div className="flex items-center space-x-2 text-xs text-surface-500">
+                <BookOpen className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{session.section_title}</span>
-                <span className="hidden sm:inline">•</span>
-                <span className="truncate hidden sm:inline">{session.original_name}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+          <div className="flex items-center space-x-2 flex-shrink-0">
             {/* Language Selector */}
             <div className="relative">
               <button
                 onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                className="mobile-button flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                className="flex items-center space-x-2 px-3 py-2 bg-surface-100 hover:bg-surface-200 rounded-xl transition-colors"
               >
-                <Globe className="h-4 w-4" />
-                <span className="text-xs sm:text-sm font-medium hidden xs:inline">{selectedLanguage.flag} {selectedLanguage.name}</span>
+                <Globe className="h-4 w-4 text-primary-600" />
+                <span className="text-xs sm:text-sm font-medium text-primary-700 hidden xs:inline">{selectedLanguage.flag} {selectedLanguage.name}</span>
                 <span className="text-sm xs:hidden">{selectedLanguage.flag}</span>
               </button>
               
               {showLanguageSelector && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 z-20 min-w-[160px] mobile-dropdown">
+                <div className="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-soft-lg border border-surface-200 z-20 min-w-[160px] overflow-hidden">
                   {supportedLanguages.map((language) => (
                     <button
                       key={language.code}
@@ -252,8 +249,8 @@ const ChatSession = () => {
                         setSelectedLanguage(language);
                         setShowLanguageSelector(false);
                       }}
-                      className={`mobile-button w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors flex items-center space-x-2 ${
-                        selectedLanguage.code === language.code ? 'bg-blue-50 text-blue-600' : ''
+                      className={`w-full text-left px-4 py-3 hover:bg-surface-50 transition-colors flex items-center space-x-2 ${
+                        selectedLanguage.code === language.code ? 'bg-primary-50 text-primary-700' : 'text-primary-900'
                       }`}
                     >
                       <span className="text-lg">{language.flag}</span>
@@ -264,9 +261,11 @@ const ChatSession = () => {
               )}
             </div>
             
-            <div className="hidden sm:flex items-center text-green-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              <span className="text-sm font-medium">Active</span>
+            <div className="hidden sm:flex items-center">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-success-100 text-success-700">
+                <div className="w-1.5 h-1.5 bg-success-500 rounded-full mr-1.5"></div>
+                Active
+              </span>
             </div>
           </div>
         </div>
@@ -275,30 +274,32 @@ const ChatSession = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto mobile-content space-y-4 sm:space-y-6 custom-scrollbar">
         {messages.length === 0 && !isStreaming && (
-          <div className="text-center py-8 sm:py-12">
-            <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-primary-600 mx-auto mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-              Welcome to your AI Tutor!
+          <div className="text-center py-10 sm:py-16">
+            <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-primary-800 to-primary-900 flex items-center justify-center mx-auto mb-5 shadow-soft">
+              <Bot className="h-8 w-8 text-accent-400" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-primary-900 mb-2">
+              Welcome to your AI Tutor
             </h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto px-4">
+            <p className="text-sm sm:text-base text-surface-600 mb-6 max-w-md mx-auto px-4">
               I'm here to help you learn about "{session.section_title}". 
-              Ask me anything about this section, and I'll provide detailed explanations.
+              Ask me anything and I'll provide detailed explanations.
             </p>
             
             {/* Suggested Questions */}
             <div className="max-w-2xl mx-auto px-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-700 mb-3">
-                <HelpCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
+              <p className="text-xs font-medium text-surface-500 mb-3 flex items-center justify-center">
+                <HelpCircle className="h-3 w-3 mr-1.5" />
                 Try asking:
               </p>
-              <div className="grid grid-cols-1 gap-2 sm:gap-3">
-                {suggestedQuestions.map((question, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {suggestedQuestions.slice(0, 4).map((question, index) => (
                   <button
                     key={index}
                     onClick={() => setInputMessage(question)}
-                    className="mobile-button text-left p-3 sm:p-4 text-xs sm:text-sm bg-white border border-gray-200 rounded-lg hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                    className="text-left p-4 text-sm bg-white border border-surface-200 rounded-xl hover:border-primary-300 hover:bg-primary-50 hover:shadow-soft transition-all duration-200"
                   >
-                    "{question}"
+                    <span className="text-primary-800">{question}</span>
                   </button>
                 ))}
               </div>
@@ -323,37 +324,37 @@ const ChatSession = () => {
                 }`}
               >
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                     message.role === 'user'
-                      ? 'bg-primary-600 text-white'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-primary-800 text-white'
+                      : 'bg-gradient-to-br from-primary-800 to-primary-900'
                   }`}
                 >
                   {message.role === 'user' ? (
                     <User className="h-4 w-4" />
                   ) : (
-                    <Bot className="h-4 w-4" />
+                    <Bot className="h-4 w-4 text-accent-400" />
                   )}
                 </div>
               </div>
 
               {/* Message */}
               <div
-                className={`px-4 py-3 rounded-lg ${
+                className={`px-4 py-3 rounded-2xl ${
                   message.role === 'user'
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white border border-gray-200'
+                    ? 'bg-primary-800 text-white rounded-tr-md'
+                    : 'bg-white border border-surface-200 shadow-soft rounded-tl-md'
                 }`}
               >
                 {message.role === 'user' ? (
                   <p className="text-sm">{message.content}</p>
                 ) : (
-                  <div className="prose prose-sm max-w-none">
+                  <div className="prose prose-sm max-w-none prose-headings:text-primary-900 prose-p:text-primary-800 prose-strong:text-primary-900">
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                     {message.isStreaming && (
                       <div className="flex items-center mt-2">
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        <span className="text-xs text-gray-500">Thinking...</span>
+                        <Loader2 className="h-3 w-3 animate-spin mr-1 text-primary-500" />
+                        <span className="text-xs text-surface-500">Thinking...</span>
                       </div>
                     )}
                   </div>
@@ -361,8 +362,8 @@ const ChatSession = () => {
                 <p
                   className={`text-xs mt-2 ${
                     message.role === 'user'
-                      ? 'text-primary-100'
-                      : 'text-gray-500'
+                      ? 'text-primary-200'
+                      : 'text-surface-400'
                   }`}
                 >
                   {formatTime(message.timestamp)}
@@ -377,17 +378,17 @@ const ChatSession = () => {
           <div className="flex justify-start">
             <div className="flex max-w-3xl">
               <div className="flex-shrink-0 mr-3">
-                <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center">
-                  <Bot className="h-4 w-4" />
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-800 to-primary-900 flex items-center justify-center">
+                  <Bot className="h-4 w-4 text-accent-400" />
                 </div>
               </div>
-              <div className="px-4 py-3 rounded-lg bg-white border border-gray-200">
-                <div className="prose prose-sm max-w-none">
+              <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-white border border-surface-200 shadow-soft">
+                <div className="prose prose-sm max-w-none prose-headings:text-primary-900 prose-p:text-primary-800">
                   <ReactMarkdown>{streamingMessage}</ReactMarkdown>
                   {sending && (
                     <div className="flex items-center mt-2">
-                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      <span className="text-xs text-gray-500">Thinking...</span>
+                      <Loader2 className="h-3 w-3 animate-spin mr-1 text-primary-500" />
+                      <span className="text-xs text-surface-500">Thinking...</span>
                     </div>
                   )}
                 </div>
@@ -399,9 +400,9 @@ const ChatSession = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="bg-white border-t border-gray-200 mobile-header safe-area-bottom">
-        <div className="flex space-x-2 sm:space-x-3">
+      {/* Premium Input */}
+      <div className="bg-white/90 backdrop-blur-md border-t border-surface-200 p-4 safe-area-bottom">
+        <div className="flex space-x-3">
           <div className="flex-1">
             <textarea
               ref={inputRef}
@@ -409,11 +410,11 @@ const ChatSession = () => {
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Ask me anything about this section..."
-              className="mobile-input textarea resize-none text-base sm:text-sm"
+              className="w-full px-4 py-3 rounded-xl border-2 border-surface-200 bg-surface-50 text-primary-900 placeholder:text-surface-400 focus:outline-none focus:border-primary-400 focus:bg-white resize-none transition-all duration-200"
               rows={1}
               disabled={sending}
               style={{
-                minHeight: '44px',
+                minHeight: '48px',
                 maxHeight: '120px',
                 height: 'auto',
                 overflow: 'hidden'
@@ -427,22 +428,21 @@ const ChatSession = () => {
           <button
             onClick={sendMessage}
             disabled={!inputMessage.trim() || sending}
-            className="mobile-button btn btn-primary flex-shrink-0 px-3 sm:px-4 py-3 sm:py-2"
+            className="h-12 w-12 rounded-xl bg-primary-800 hover:bg-primary-900 disabled:bg-surface-300 text-white flex items-center justify-center transition-colors flex-shrink-0"
           >
             {sending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-              <Send className="h-4 w-4" />
+              <Send className="h-5 w-5" />
             )}
           </button>
         </div>
         
-        <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
-          <div className="flex items-center space-x-4">
-            <span>Press Enter to send, Shift+Enter for new line</span>
-          </div>
+        <div className="flex items-center justify-between mt-3 text-xs text-surface-400">
+          <span className="hidden sm:inline">Press Enter to send, Shift+Enter for new line</span>
+          <span className="sm:hidden">Enter to send</span>
           <div className="flex items-center space-x-1">
-            <Sparkles className="h-3 w-3" />
+            <Sparkles className="h-3 w-3 text-accent-500" />
             <span>Powered by AI</span>
           </div>
         </div>

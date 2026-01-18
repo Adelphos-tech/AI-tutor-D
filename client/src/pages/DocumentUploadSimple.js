@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Upload, Clock } from 'lucide-react';
+import { ArrowLeft, Upload, Clock, FileText, CheckCircle, Sparkles } from 'lucide-react';
 
 const DocumentUploadSimple = () => {
   console.log('DocumentUploadSimple: Starting render...');
@@ -232,45 +232,64 @@ const DocumentUploadSimple = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 p-4">
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Premium Header */}
       <div className="flex items-center space-x-4">
         <button
           onClick={() => navigate('/')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          className="h-10 w-10 rounded-xl bg-surface-100 hover:bg-surface-200 flex items-center justify-center transition-colors"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 text-primary-700" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Upload Documents (Simple)</h1>
-          <p className="text-gray-600">Simplified version for debugging</p>
+          <div className="flex items-center space-x-2 mb-0.5">
+            <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-primary-800 to-primary-900 flex items-center justify-center">
+              <Sparkles className="h-3 w-3 text-accent-400" />
+            </div>
+            <span className="text-xs font-medium text-accent-600 bg-accent-50 px-2 py-0.5 rounded-full">Upload</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-primary-900 tracking-tight">Upload Documents</h1>
+          <p className="text-surface-500 text-sm">Add your study materials to get started</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-          <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-lg text-gray-600 mb-2">Select files to upload</p>
+      {/* Premium Upload Card */}
+      <div className="card-premium p-8">
+        <div className="border-2 border-dashed border-surface-300 rounded-2xl p-10 text-center hover:border-primary-300 hover:bg-primary-50/30 transition-all duration-200 cursor-pointer">
+          <div className="h-16 w-16 rounded-2xl bg-primary-100 flex items-center justify-center mx-auto mb-4">
+            <Upload className="h-8 w-8 text-primary-600" />
+          </div>
+          <p className="text-lg font-medium text-primary-900 mb-1">Drop your files here</p>
+          <p className="text-sm text-surface-500 mb-4">or click to browse</p>
           <input
             type="file"
             multiple
             accept=".pdf,.docx,.xlsx,.txt"
             onChange={handleFileSelect}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="block w-full max-w-xs mx-auto text-sm text-surface-600 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-primary-800 file:text-white hover:file:bg-primary-900 file:cursor-pointer file:transition-colors"
           />
+          <p className="text-xs text-surface-400 mt-4">Supports PDF, DOCX, XLSX, TXT</p>
         </div>
         
+        {/* Selected Files */}
         {files.length > 0 && (
-          <div className="mt-6">
-            <h3 className="font-medium text-gray-900 mb-3">Selected Files: ({files.length})</h3>
+          <div className="mt-6 pt-6 border-t border-surface-200">
+            <h3 className="font-semibold text-primary-900 mb-3 flex items-center">
+              <FileText className="h-4 w-4 mr-2 text-primary-600" />
+              Selected Files ({files.length})
+            </h3>
             <ul className="space-y-2">
-              {files.map((file, index) => {
-                console.log('Rendering file:', index, file.name, file.size);
-                return (
-                  <li key={index} className="text-sm text-gray-600">
-                    {file.name} ({Math.round(file.size / 1024)} KB)
-                  </li>
-                );
-              })}
+              {files.map((file, index) => (
+                <li key={index} className="flex items-center p-3 bg-surface-50 rounded-xl">
+                  <div className="h-10 w-10 rounded-lg bg-white border border-surface-200 flex items-center justify-center mr-3">
+                    <FileText className="h-5 w-5 text-primary-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-primary-900 truncate">{file.name}</p>
+                    <p className="text-xs text-surface-500">{Math.round(file.size / 1024)} KB</p>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
         )}
@@ -281,14 +300,11 @@ const DocumentUploadSimple = () => {
             <button
               onClick={handleUpload}
               disabled={uploading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+              className="w-full btn btn-primary py-4 text-base"
             >
               {uploading ? (
                 <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
+                  <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
                   Uploading... {uploadProgress}%
                 </span>
               ) : (
@@ -299,22 +315,18 @@ const DocumentUploadSimple = () => {
               )}
             </button>
             
-            {/* Upload Progress Bar */}
+            {/* Premium Progress Bar */}
             {uploading && (
-              <div className="mt-3">
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Uploading file...</span>
-                  <span className="font-medium">{uploadProgress}%</span>
+              <div className="mt-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-surface-600">Uploading file...</span>
+                  <span className="font-semibold text-primary-700">{uploadProgress}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div className="w-full bg-surface-200 rounded-full h-2 overflow-hidden">
                   <div 
-                    className="bg-blue-600 h-full transition-all duration-300 ease-out flex items-center justify-end pr-2"
+                    className="bg-gradient-to-r from-primary-600 to-primary-700 h-full rounded-full transition-all duration-300 ease-out"
                     style={{ width: `${uploadProgress}%` }}
-                  >
-                    {uploadProgress > 10 && (
-                      <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                    )}
-                  </div>
+                  />
                 </div>
               </div>
             )}
@@ -323,34 +335,29 @@ const DocumentUploadSimple = () => {
 
         {/* Processing Status */}
         {processing && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-6 p-5 bg-primary-50 border border-primary-200 rounded-2xl">
             <div className="flex items-start">
-              <svg className="animate-spin h-5 w-5 text-blue-600 mr-3 mt-1 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <div className="h-10 w-10 rounded-xl bg-primary-100 flex items-center justify-center mr-4 flex-shrink-0">
+                <div className="h-5 w-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <p className="text-blue-800 font-medium">Processing your document...</p>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
-                      <span className="text-sm font-medium">{processingProgress}%</span>
-                    </div>
-                    <div className="flex items-center text-blue-700 bg-blue-100 px-3 py-1 rounded-full">
-                      <Clock className="h-4 w-4 mr-1" />
-                      <span className="text-sm font-medium">{formatElapsedTime(processingElapsed)}</span>
-                    </div>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <p className="text-primary-900 font-semibold">Processing your document...</p>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                      {processingProgress}%
+                    </span>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary-100 text-primary-700">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {formatElapsedTime(processingElapsed)}
+                    </span>
                   </div>
                 </div>
-                <p className="text-blue-600 text-sm mt-2">{processingStage}</p>
-                <div className="mt-3">
-                  <div className="flex justify-between text-xs text-blue-600 mb-1">
-                    <span>Progress</span>
-                    <span>{processingProgress}% complete</span>
-                  </div>
-                  <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                <p className="text-primary-600 text-sm mt-2">{processingStage}</p>
+                <div className="mt-4">
+                  <div className="w-full bg-primary-200 rounded-full h-2 overflow-hidden">
                     <div 
-                      className="bg-blue-600 h-full rounded-full transition-all duration-500 ease-out"
+                      className="bg-gradient-to-r from-primary-600 to-accent-500 h-full rounded-full transition-all duration-500 ease-out"
                       style={{ width: `${processingProgress}%` }}
                     ></div>
                   </div>
@@ -362,14 +369,14 @@ const DocumentUploadSimple = () => {
 
         {/* Processing Complete */}
         {processingComplete && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-6 p-5 bg-success-50 border border-success-200 rounded-2xl">
             <div className="flex items-center">
-              <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+              <div className="h-10 w-10 rounded-xl bg-success-100 flex items-center justify-center mr-4">
+                <CheckCircle className="h-5 w-5 text-success-600" />
+              </div>
               <div>
-                <p className="text-green-800 font-medium">✅ Processing complete!</p>
-                <p className="text-green-600 text-sm">Redirecting to dashboard...</p>
+                <p className="text-success-800 font-semibold">Processing complete!</p>
+                <p className="text-success-600 text-sm">Redirecting to dashboard...</p>
               </div>
             </div>
           </div>
@@ -377,24 +384,26 @@ const DocumentUploadSimple = () => {
 
         {/* Upload Success (fallback) */}
         {uploadComplete && !processing && !processingComplete && (
-          <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-6 p-5 bg-success-50 border border-success-200 rounded-2xl">
             <div className="flex items-center">
-              <svg className="h-5 w-5 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <p className="text-green-800 font-medium">Upload successful! Redirecting to dashboard...</p>
+              <div className="h-10 w-10 rounded-xl bg-success-100 flex items-center justify-center mr-4">
+                <CheckCircle className="h-5 w-5 text-success-600" />
+              </div>
+              <p className="text-success-800 font-semibold">Upload successful! Redirecting to dashboard...</p>
             </div>
           </div>
         )}
 
         {/* Error Message */}
         {error && (
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-6 p-5 bg-red-50 border border-red-200 rounded-2xl">
             <div className="flex items-center">
-              <svg className="h-5 w-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p className="text-red-800">{error}</p>
+              <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center mr-4">
+                <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-red-800 font-medium">{error}</p>
             </div>
           </div>
         )}
