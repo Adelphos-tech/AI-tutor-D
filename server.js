@@ -17,6 +17,25 @@ const PORT = process.env.PORT || 5001;
 // Use environment variables for Pinecone configuration
 // Set these in your .env file or deployment environment
 
+// Trust proxy - required for Railway/Heroku to get correct protocol
+app.set('trust proxy', 1);
+
+// HTTPS redirect middleware for production (Railway SSL)
+app.use((req, res, next) => {
+  // Skip in development
+  if (process.env.NODE_ENV !== 'production') {
+    return next();
+  }
+  
+  // Check x-forwarded-proto header (set by Railway's proxy)
+  if (req.headers['x-forwarded-proto'] !== 'https') {
+    // Redirect to HTTPS
+    return res.redirect(301, `https://${req.headers.host}${req.url}`);
+  }
+  
+  next();
+});
+
 // Middleware
 app.use(cors({
   origin: [
